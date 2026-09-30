@@ -1,0 +1,5 @@
+---
+mode: locked
+---
+
+Locked page.

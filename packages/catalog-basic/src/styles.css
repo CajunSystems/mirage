@@ -1,0 +1,73 @@
+:root {
+  --mi-font: system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mi-bg: #fbfbf9;
+  --mi-surface: #ffffff;
+  --mi-text: #1d2320;
+  --mi-muted: #66706a;
+  --mi-border: #e2e5e1;
+  --mi-accent: #2f6f4f;
+  --mi-accent-text: #ffffff;
+  --mi-radius: 8px;
+  --mi-space-sm: 6px;
+  --mi-space-md: 12px;
+  --mi-space-lg: 24px;
+  --mi-success: #2f7a4a;
+  --mi-warning: #9a6a12;
+  --mi-danger: #b3362f;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --mi-bg: #141816;
+    --mi-surface: #1c211e;
+    --mi-text: #e6ebe7;
+    --mi-muted: #98a29c;
+    --mi-border: #2e3531;
+    --mi-accent: #5fb48a;
+    --mi-accent-text: #0e1411;
+  }
+}
+body { margin: 0; background: var(--mi-bg); color: var(--mi-text); font: 15px/1.5 var(--mi-font); }
+.mi-stack { display: flex; flex-direction: column; }
+.mi-row { display: flex; flex-wrap: wrap; align-items: center; }
+.mi-gap-sm { gap: var(--mi-space-sm); }
+.mi-gap-md { gap: var(--mi-space-md); }
+.mi-gap-lg { gap: var(--mi-space-lg); }
+.mi-align-start { justify-content: flex-start; }
+.mi-align-center { justify-content: center; }
+.mi-align-end { justify-content: flex-end; }
+.mi-align-between { justify-content: space-between; }
+.mi-grid { display: grid; gap: var(--mi-space-md); }
+.mi-heading { margin: 0; line-height: 1.2; }
+.mi-text { margin: 0; }
+.mi-tone-muted { color: var(--mi-muted); }
+.mi-card { background: var(--mi-surface); border: 1px solid var(--mi-border); border-radius: var(--mi-radius); padding: var(--mi-space-md); display: flex; flex-direction: column; gap: var(--mi-space-md); }
+.mi-card-title { margin: 0; font-size: 1rem; }
+.mi-badge { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: 0.8rem; border: 1px solid currentColor; }
+.mi-badge-neutral { color: var(--mi-muted); }
+.mi-badge-success { color: var(--mi-success); }
+.mi-badge-warning { color: var(--mi-warning); }
+.mi-badge-danger { color: var(--mi-danger); }
+.mi-stat { background: var(--mi-surface); border: 1px solid var(--mi-border); border-radius: var(--mi-radius); padding: var(--mi-space-md); }
+.mi-stat-label, .mi-stat-hint { color: var(--mi-muted); font-size: 0.85rem; }
+.mi-stat-value { font-size: 1.6rem; font-weight: 600; }
+.mi-button { font: inherit; border-radius: var(--mi-radius); padding: 6px 14px; cursor: pointer; border: 1px solid var(--mi-border); background: var(--mi-surface); color: var(--mi-text); }
+.mi-button-primary { background: var(--mi-accent); border-color: var(--mi-accent); color: var(--mi-accent-text); }
+.mi-table { width: 100%; border-collapse: collapse; background: var(--mi-surface); border: 1px solid var(--mi-border); border-radius: var(--mi-radius); }
+.mi-table th, .mi-table td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--mi-border); }
+.mi-table th { font-size: 0.8rem; color: var(--mi-muted); font-weight: 600; }
+.mi-table-message { color: var(--mi-muted); }
+.mi-clickable { cursor: pointer; }
+.mi-clickable:hover { background: var(--mi-bg); }
+.mi-form { display: flex; flex-direction: column; gap: var(--mi-space-md); }
+.mi-form-actions { display: flex; justify-content: flex-end; }
+.mi-field { display: flex; flex-direction: column; gap: 4px; }
+.mi-field-label { font-size: 0.85rem; color: var(--mi-muted); }
+.mi-input { font: inherit; padding: 6px 10px; border-radius: var(--mi-radius); border: 1px solid var(--mi-border); background: var(--mi-surface); color: var(--mi-text); }
+.mi-tab-list { display: flex; gap: 4px; border-bottom: 1px solid var(--mi-border); margin-bottom: var(--mi-space-md); }
+.mi-tab { font: inherit; background: none; border: 0; padding: 6px 12px; cursor: pointer; color: var(--mi-muted); border-bottom: 2px solid transparent; }
+.mi-tab[aria-selected="true"] { color: var(--mi-text); border-bottom-color: var(--mi-accent); }
+.mi-dialog-backdrop { position: fixed; inset: 0; background: rgb(0 0 0 / 0.35); display: grid; place-items: center; padding: 16px; }
+.mi-dialog { background: var(--mi-surface); border-radius: var(--mi-radius); padding: var(--mi-space-lg); width: min(480px, 100%); display: flex; flex-direction: column; gap: var(--mi-space-md); }
+.mi-skeleton { min-height: 1.2em; border-radius: var(--mi-radius); background: linear-gradient(90deg, var(--mi-border), var(--mi-surface), var(--mi-border)); background-size: 200% 100%; animation: mi-shimmer 1.2s linear infinite; }
+@keyframes mi-shimmer { to { background-position: -200% 0; } }
+.mi-error-chip { display: inline-block; font: 12px/1.4 ui-monospace, monospace; color: var(--mi-danger); border: 1px dashed var(--mi-danger); border-radius: 4px; padding: 2px 6px; white-space: pre-wrap; }
