@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { defineCatalog, defineTool, toolSignature, validateSpec, z, type Spec } from "@mirage/core";
+import { defineCatalog, defineTool, isSafePath, toolSignature, validateSpec, z, type Spec } from "@mirage/core";
 
 const Noop = () => null;
 const catalog = defineCatalog({
@@ -131,6 +131,12 @@ describe("validateSpec", () => {
     delete s.state;
     s.elements.add.props.onPress = { $action: "setState", path: "search", value: "x" };
     expect(check(s).ok).toBe(true);
+  });
+
+  it("isSafePath only accepts same-origin paths", () => {
+    for (const ok of ["/", "/plants", "/plants/p1?tab=care#notes"]) expect(isSafePath(ok)).toBe(true);
+    for (const bad of ["//evil.com", "/\t/evil.com", "/\n/evil.com", "/\\evil.com", "\\/evil.com", "https://evil.com", "javascript:alert(1)", "plants", "/\u0000x"])
+      expect(isSafePath(bad), JSON.stringify(bad)).toBe(false);
   });
 
   it("rejects off-origin navigation", () => {

@@ -107,7 +107,7 @@ A searchable list of every plant in the greenhouse.
 - Keep it dense and calm. No decorative elements.
 ```
 
-Frontmatter keys: `title`, `mode`, `params` (for example `{ id: string }`, informational for the model), `catalog`, `specPerParams` (use a separate spec for each param value), and `ttl` (the reuse window for live pages, in seconds).
+Frontmatter keys: `title`, `mode`, `params` (for example `{ id: string }`, informational for the model), `catalog`, `specPerParams` (use a separate spec for each param value), `maxSpecs` (the cap on specs generated per route, default 100), and `ttl` (the reuse window for live pages, in seconds).
 
 Rules:
 - The body is free-form. It is passed verbatim to the model as the page brief.
@@ -327,7 +327,9 @@ pnpm typecheck    # packages + the example app
 
 - The spec is data. No code path evaluates strings from the model.
 - Tools are an allowlist per route. Every call is validated again on the server with zod, whatever the client sends.
-- `navigate` accepts same-origin paths only, and this is checked both when validating the spec and at dispatch.
+- `navigate` accepts same-origin paths only (control characters and backslashes are rejected), and this is checked both when validating the spec and at dispatch.
+- Route params sent to the generate endpoint are validated, and each route has a cap on generated specs.
+- Tool output that fails its output schema is never sent to the client.
 - Model output never reaches `dangerouslySetInnerHTML`. Catalog components treat all string props as text.
 - The tool `ctx` is built on the server from the real request.
 - Tool outputs are not logged. Validation failures log only the issue paths.

@@ -34,6 +34,8 @@ export type MirageServerOptions = {
 export type ResolveOptions = {
   /** Skip page.spec.json and caches, always call the model (for `mirage regen`). */
   force?: boolean;
+  /** Allow generating for `mode: locked` routes that have no page.spec.json (for `mirage lock` / `eject`). */
+  allowLocked?: boolean;
   signal?: AbortSignal;
 };
 
@@ -50,6 +52,8 @@ class HttpError extends Error {
   }
 }
 
+const MAX_PARAM_LENGTH = 200;
+
 const defaultRead = async (path: string) => (existsSync(path) ? readFile(path, "utf8") : undefined);
 
 export function createMirageServer(options: MirageServerOptions) {
@@ -59,6 +63,16 @@ export function createMirageServer(options: MirageServerOptions) {
   const fileCache = new SpecCache(options.cacheDir);
   const memory = new MemoryCache();
   const routes = () => (typeof options.routes === "function" ? options.routes() : options.routes);
+  const generatedKeys = new Map<string, Set<string>>();
+
+  /** Params come from the client: they must be exactly the route's params, as short strings. */
+  function checkParams(info: RouteInfo, params: Record<string, string>) {
+    const names = Object.keys(params);
+    const valid =
+      names.length === info.paramNames.length &&
+      info.paramNames.every((n) => typeof params[n] === "string" && params[n]!.length > 0 && params[n]!.length <= MAX_PARAM_LENGTH);
+    if (!valid) throw new HttpError(400, `Invalid params for "${info.path}": expected ${info.paramNames.join(", ") || "none"}`);
+  }
 
   function route(path: string): RouteInfo {
     const found = findRoute(routes(), path);
@@ -102,7 +116,7 @@ export function createMirageServer(options: MirageServerOptions) {
         const text = await readText(info.specPath);
         if (text !== undefined) return done(JSON.parse(text) as Spec, "locked");
       }
-      if (mode === "locked" && !opts.force) {
+      if (mode === "locked" && !opts.force && !opts.allowLocked) {
         throw new HttpError(409, `Route "${info.path}" is locked but has no page.spec.json. Run \`mirage lock ${info.path}\`.`);
       }
 
@@ -120,6 +134,11 @@ export function createMirageServer(options: MirageServerOptions) {
       }
 
       if (!config.model) throw new HttpError(503, `No model configured; cannot generate "${info.path}".`);
+      // Bound model calls per route: with specPerParams, every distinct param value is a new spec.
+      const keys = generatedKeys.get(info.path) ?? new Set<string>();
+      if (!keys.has(key) && keys.size >= intent.frontmatter.maxSpecs && !opts.force) {
+        throw new HttpError(429, `Route "${info.path}" reached its limit of ${intent.frontmatter.maxSpecs} generated specs.`);
+      }
       log(`generating ${info.path}`);
       const result = await generateSpec({
         model: config.model,
@@ -138,6 +157,8 @@ export function createMirageServer(options: MirageServerOptions) {
         emit({ type: "error", message: `Generation failed after ${result.attempts} attempts`, errors: result.errors });
         return { ok: false, message: "generation failed", status: 422 };
       }
+      keys.add(key);
+      generatedKeys.set(info.path, keys);
       if (mode === "live") memory.set(key, result.spec, intent.frontmatter.ttl);
       else await fileCache.set(key, result.spec).catch((e: unknown) => log(`could not write cache: ${String(e)}`));
       return done(result.spec, "generated");
@@ -154,7 +175,16 @@ export function createMirageServer(options: MirageServerOptions) {
   app.post("/__mirage/generate", async (c) => {
     const body = (await c.req.json().catch(() => ({}))) as { route?: unknown; params?: unknown };
     if (typeof body.route !== "string") return c.json({ error: "route is required" }, 400);
+    if (body.params !== undefined && (typeof body.params !== "object" || body.params === null || Array.isArray(body.params))) {
+      return c.json({ error: "params must be an object" }, 400);
+    }
     const params = (body.params ?? {}) as Record<string, string>;
+    try {
+      checkParams(route(body.route), params);
+    } catch (error) {
+      if (error instanceof HttpError) return c.json({ error: error.message }, error.status as 400);
+      throw error;
+    }
     const encoder = new TextEncoder();
     const signal = c.req.raw.signal;
     const stream = new ReadableStream<Uint8Array>({
@@ -196,9 +226,8 @@ export function createMirageServer(options: MirageServerOptions) {
       if (!output.success) {
         // Outputs are redacted from logs by default: log only the issue paths.
         const paths = output.error.issues.map((i) => i.path.join(".") || "(root)").join(", ");
-        if (dev) throw new HttpError(500, `Tool "${name}" returned invalid output at: ${paths}`);
         log(`tool "${name}" returned invalid output at: ${paths}`);
-        return c.json({ result });
+        throw new HttpError(500, dev ? `Tool "${name}" returned invalid output at: ${paths}` : "Tool failed");
       }
       return c.json({ result: output.data });
     } catch (error) {

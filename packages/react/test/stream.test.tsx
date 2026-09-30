@@ -67,6 +67,18 @@ describe("useGeneratedSpec", () => {
     expect(JSON.parse((fetchMock.mock.calls[0] as unknown as [string, RequestInit])[1].body as string)).toEqual({ route: "/plants", params: {} });
   });
 
+  it("reports a non-OK response", async () => {
+    vi.stubGlobal("fetch", async () => new Response(JSON.stringify({ error: "route is required" }), { status: 400 }));
+    render(<Probe />);
+    await waitFor(() => expect(screen.getByTestId("out").textContent).toContain('"status":"error"'));
+  });
+
+  it("reports a stream that ends without a spec", async () => {
+    vi.stubGlobal("fetch", async () => streamResponse([{ type: "delta", text: '{"root":"page"' }]));
+    render(<Probe />);
+    await waitFor(() => expect(screen.getByTestId("out").textContent).toContain('"status":"error"'));
+  });
+
   it("surfaces errors", async () => {
     vi.stubGlobal("fetch", async () => streamResponse([{ type: "error", message: "nope", errors: [{ path: "root", message: "bad" }] }]));
     render(<Probe />);

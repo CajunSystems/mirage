@@ -1,4 +1,4 @@
-import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -194,6 +194,62 @@ describe("generation", () => {
     expect(events.some((e) => e.type === "retry")).toBe(false);
   });
 
+  it("reports provider errors instead of retrying them as bad JSON", async () => {
+    const model = new MockLanguageModelV4({
+      doStream: async () => {
+        throw new Error("401 invalid x-api-key");
+      },
+    });
+    const events = await generate(server({ model }), "/plants");
+    expect(model.doStreamCalls.length).toBe(1);
+    expect(events.some((e) => e.type === "retry")).toBe(false);
+    expect(events.at(-1)).toMatchObject({ type: "error", message: expect.stringContaining("401 invalid x-api-key") });
+  });
+
+  it("rejects params that do not match the route", async () => {
+    const model = mockModel([validSpec]);
+    const s = server({ model });
+    for (const params of [{}, { id: "p1", extra: "x" }, { id: "x".repeat(201) }, { id: 5 }, ["p1"]]) {
+      const res = await s.app.request("/__mirage/generate", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ route: "/plants/:id", params }),
+      });
+      expect(res.status).toBe(400);
+    }
+    expect(model.doStreamCalls.length).toBe(0);
+  });
+
+  it("bounds generated specs per route", async () => {
+    const intentPath = join(appDir, "plants", "[id]", "page.intent.md");
+    const original = readFileSync(intentPath, "utf8");
+    writeFileSync(intentPath, original.replace("mode: live", "mode: live\nspecPerParams: true\nmaxSpecs: 2"));
+    try {
+      const model = mockModel([validSpec, validSpec, validSpec]);
+      const s = server({ model });
+      await generate(s, "/plants/:id", { id: "a" });
+      await generate(s, "/plants/:id", { id: "b" });
+      expect((await generate(s, "/plants/:id", { id: "a" })).at(-1)).toMatchObject({ source: "cached" });
+      expect((await generate(s, "/plants/:id", { id: "c" })).at(-1)).toMatchObject({ type: "error", message: expect.stringMatching(/limit of 2/) });
+      expect(model.doStreamCalls.length).toBe(2);
+    } finally {
+      writeFileSync(intentPath, original);
+    }
+  });
+
+  it("lets the CLI resolve a dynamic route without params", async () => {
+    const result = await server({ model: mockModel([validSpec]) }).resolveSpec("/plants/:id", {}, () => {});
+    expect(result).toMatchObject({ ok: true, source: "generated" });
+  });
+
+  it("lets the CLI generate for a locked route with no spec", async () => {
+    const plain: Spec = { version: 1, root: "t", elements: { t: { type: "Heading", props: { text: "Locked" } } } };
+    const s = server({ model: mockModel([plain]) });
+    expect((await s.resolveSpec("/locked", {}, () => {})).ok).toBe(false);
+    const result = await s.resolveSpec("/locked", {}, () => {}, { allowLocked: true });
+    expect(result).toMatchObject({ ok: true, source: "generated" });
+  });
+
   it("changes the cache key when inputs change", () => {
     const base = { intentSource: "a", catalogHash: "c", toolsHash: toolsHash([]) };
     expect(cacheKey(base)).toBe(cacheKey({ ...base }));
@@ -218,9 +274,11 @@ describe("tools endpoint", () => {
     expect(await (await callTool(s, "ping", { route: "/plants/:id", args: {} })).json()).toEqual({ result: "route" });
   });
 
-  it("validates tool output (dev: error, prod: log)", async () => {
+  it("never returns output that fails the output schema", async () => {
     expect((await callTool(server({}), "broken", { route: "/plants" })).status).toBe(500);
-    expect((await callTool(server({}, false), "broken", { route: "/plants" })).status).toBe(200);
+    const prod = await callTool(server({}, false), "broken", { route: "/plants" });
+    expect(prod.status).toBe(500);
+    expect(await prod.json()).toEqual({ error: "Tool failed" });
   });
 
   it("builds ctx from the config context hook", async () => {

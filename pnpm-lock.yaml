@@ -51,55 +51,6 @@ importers:
         specifier: ^4.1.0
         version: 4.6.5
 
-  examples/_scratch:
-    dependencies:
-      '@ai-sdk/anthropic':
-        specifier: ^4.0.0
-        version: 4.0.69(zod@4.6.5)
-      '@mirage/catalog-basic':
-        specifier: workspace:*
-        version: link:../../packages/catalog-basic
-      '@mirage/cli':
-        specifier: workspace:*
-        version: link:../../packages/cli
-      '@mirage/core':
-        specifier: workspace:*
-        version: link:../../packages/core
-      '@mirage/react':
-        specifier: workspace:*
-        version: link:../../packages/react
-      '@mirage/server':
-        specifier: workspace:*
-        version: link:../../packages/server
-      '@mirage/vite':
-        specifier: workspace:*
-        version: link:../../packages/vite
-      ai:
-        specifier: ^7.0.0
-        version: 7.0.123(zod@4.6.5)
-      react:
-        specifier: ^19.1.0
-        version: 19.3.0
-      react-dom:
-        specifier: ^19.1.0
-        version: 19.3.0(react@19.3.0)
-      react-router:
-        specifier: ^7.9.0
-        version: 7.18.4(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
-    devDependencies:
-      '@types/node':
-        specifier: ^22.10.0
-        version: 22.20.4
-      '@vitejs/plugin-react':
-        specifier: ^5.0.0
-        version: 5.2.0(vite@7.3.6(@types/node@22.20.4))
-      typescript:
-        specifier: ^5.9.0
-        version: 5.9.3
-      vite:
-        specifier: ^7.1.0
-        version: 7.3.6(@types/node@22.20.4)
-
   examples/greenhouse:
     dependencies:
       '@ai-sdk/anthropic':

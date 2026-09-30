@@ -85,7 +85,7 @@ export async function lock(root: string, route: string | undefined, options: { a
   await withProject(root, async (project) => {
     for (const info of pickRoutes(project, route, Boolean(options.all))) {
       const target = join(info.dir, SPEC_FILE);
-      const result = await project.mirage.resolveSpec(info.path, {}, progress(info.path));
+      const result = await project.mirage.resolveSpec(info.path, {}, progress(info.path), { allowLocked: true });
       if (!result.ok) throw new Error(`${info.path}: ${result.message}`);
       if (result.source === "locked") {
         console.log(`${info.path}: already locked (${relative(root, target)})`);
@@ -127,7 +127,7 @@ export async function eject(root: string, route: string, options: { keepIntent?:
   await withProject(root, async (project) => {
     const info = project.mirage.route(route);
     if (info.pagePath) throw new Error(`${info.path} is already ejected (${relative(root, info.pagePath)})`);
-    const result = await project.mirage.resolveSpec(info.path, {}, progress(info.path));
+    const result = await project.mirage.resolveSpec(info.path, {}, progress(info.path), { allowLocked: true });
     if (!result.ok) throw new Error(`${info.path}: ${result.message}`);
     let catalogImport = relative(info.dir, project.paths.catalogFile).replace(/\\/g, "/").replace(/\.tsx?$/, "");
     if (!catalogImport.startsWith(".")) catalogImport = `./${catalogImport}`;

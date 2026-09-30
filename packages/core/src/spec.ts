@@ -83,7 +83,14 @@ export function setPath<T>(target: T, path: string, value: unknown): T {
 
 /** Same-origin path check used for every `navigate`. */
 export function isSafePath(to: string): boolean {
-  return to.startsWith("/") && !to.startsWith("//") && !to.includes("\\") && !/^\/*[a-z]+:/i.test(to);
+  // Browsers strip tabs/newlines and treat "\\" like "/", so "/\t/evil.com" would become "//evil.com".
+  if (!to.startsWith("/") || /[\u0000-\u001f\u007f\\]/.test(to)) return false;
+  try {
+    const base = "http://mirage.invalid";
+    return new URL(to, base).origin === base;
+  } catch {
+    return false;
+  }
 }
 
 /** Events sent by `POST /__mirage/generate`, one JSON object per line. */

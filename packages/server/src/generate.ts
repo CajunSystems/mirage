@@ -35,11 +35,17 @@ export async function generateSpec(options: GenerateOptions): Promise<GenerateRe
       prompt,
       output: Output.object({ schema, name: "mirage_spec" }),
       abortSignal: options.abortSignal,
+      onError: () => {}, // surfaced through fullStream below
     });
+    // fullStream, not textStream: textStream ends quietly on provider errors (auth, rate limits),
+    // which would look like truncated JSON and burn repair attempts.
     let text = "";
-    for await (const delta of result.textStream) {
-      text += delta;
-      options.onDelta?.(delta);
+    for await (const part of result.fullStream) {
+      if (part.type === "error") throw part.error instanceof Error ? part.error : new Error(String(part.error));
+      if (part.type === "text-delta") {
+        text += part.text;
+        options.onDelta?.(part.text);
+      }
     }
 
     if (options.abortSignal?.aborted) {

@@ -70,8 +70,10 @@ export function useGeneratedSpec(route: string, params: Record<string, string>, 
     let latest: PartialSpec | null = null;
     setState({ status: "loading", spec: null });
 
+    let finished = false;
     const onEvent = (e: GenerateEvent) => {
       if (controller.signal.aborted) return;
+      if (e.type === "spec" || e.type === "error") finished = true;
       if (e.type === "spec") setState({ status: "done", spec: e.spec, source: e.source });
       else if (e.type === "retry") text = "";
       else if (e.type === "error") setState({ status: "error", spec: latest, message: e.message, errors: e.errors });
@@ -90,9 +92,19 @@ export function useGeneratedSpec(route: string, params: Record<string, string>, 
       body: JSON.stringify({ route, params }),
       signal: controller.signal,
     })
-      .then((res) => readGenerateStream(res, onEvent))
+      .then(async (res) => {
+        if (!res.ok) {
+          const body = (await res.json().catch(() => ({}))) as { error?: string };
+          throw new Error(body.error ?? `Generate request failed with ${res.status}`);
+        }
+        await readGenerateStream(res, onEvent);
+        if (!finished) throw new Error("The generate stream ended before a spec was produced");
+      })
       .catch((error: unknown) => {
-        if (!controller.signal.aborted) setState({ status: "error", spec: latest, message: String(error) });
+        if (!controller.signal.aborted) {
+          const message = error instanceof Error ? error.message : String(error);
+          setState({ status: "error", spec: latest, message });
+        }
       });
     return () => controller.abort();
     // eslint-disable-next-line react-hooks/exhaustive-deps
