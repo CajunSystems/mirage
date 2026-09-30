@@ -22,7 +22,7 @@ export type ComponentDescription = {
 export type Catalog<E extends Record<string, CatalogEntry> = Record<string, CatalogEntry>> = {
   entries: E;
   /** Names of every entry. */
-  names: (keyof E & string)[];
+  names: string[];
   /** JSON Schema + description per component, for the prompt. */
   describe(): ComponentDescription[];
   /** The zod schema of a complete spec built from this catalog. */
@@ -59,7 +59,7 @@ function mapShape(props: PropsSchema, fn: (s: z.ZodType) => z.ZodType) {
 }
 
 export function defineCatalog<E extends Record<string, CatalogEntry>>(entries: E): Catalog<E> {
-  const names = Object.keys(entries) as (keyof E & string)[];
+  const names = Object.keys(entries);
   if (names.length === 0) throw new Error("defineCatalog: the catalog must have at least one entry");
 
   const specProps = new Map<string, z.ZodType>();

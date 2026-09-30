@@ -1,0 +1,7 @@
+.moisture { display: flex; flex-direction: column; gap: 4px; }
+.moisture-label { display: flex; justify-content: space-between; font-size: 0.85rem; color: var(--mi-muted); }
+.moisture-track { height: 8px; border-radius: 999px; background: var(--mi-border); overflow: hidden; }
+.moisture-fill { height: 100%; border-radius: 999px; }
+.moisture-dry { background: var(--mi-warning); }
+.moisture-ok { background: var(--mi-success); }
+.moisture-wet { background: #3a6ea5; }

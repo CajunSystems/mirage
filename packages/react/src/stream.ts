@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { parsePartialJson } from "ai";
 import type { GenerateEvent, PartialSpec, Spec, ValidationError } from "@mirage/core";
+import { parsePartialJson } from "./partial-json.js";
 
 export type SpecStatus =
   | { status: "loading"; spec: null }
@@ -68,22 +68,19 @@ export function useGeneratedSpec(route: string, params: Record<string, string>, 
     const controller = new AbortController();
     let text = "";
     let latest: PartialSpec | null = null;
-    let parsing = Promise.resolve();
     setState({ status: "loading", spec: null });
 
     const onEvent = (e: GenerateEvent) => {
+      if (controller.signal.aborted) return;
       if (e.type === "spec") setState({ status: "done", spec: e.spec, source: e.source });
       else if (e.type === "retry") text = "";
       else if (e.type === "error") setState({ status: "error", spec: latest, message: e.message, errors: e.errors });
       else if (e.type === "delta") {
         text += e.text;
-        const snapshot = text;
-        parsing = parsing.then(async () => {
-          const { value } = await parsePartialJson(snapshot);
-          if (controller.signal.aborted || !value || typeof value !== "object") return;
-          latest = settle(value as PartialSpec);
-          setState((s) => (s.status === "done" || s.status === "error" ? s : { status: "streaming", spec: latest! }));
-        });
+        const value = parsePartialJson(text);
+        if (!value || typeof value !== "object") return;
+        latest = settle(value as PartialSpec);
+        setState({ status: "streaming", spec: latest });
       }
     };
 

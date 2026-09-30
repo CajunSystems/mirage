@@ -42,6 +42,9 @@ export async function generateSpec(options: GenerateOptions): Promise<GenerateRe
       options.onDelta?.(delta);
     }
 
+    if (options.abortSignal?.aborted) {
+      return { ok: false, errors: [{ path: "(root)", message: "generation aborted" }], attempts: attempt };
+    }
     let parsed: unknown;
     try {
       parsed = JSON.parse(text);

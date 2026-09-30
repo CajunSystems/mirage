@@ -180,6 +180,20 @@ describe("generation", () => {
     expect(model.doStreamCalls.length).toBe(1);
   });
 
+  it("stops without repairing when the request is aborted", async () => {
+    const model = mockModel([validSpec, validSpec, validSpec]);
+    const s = server({ model });
+    const controller = new AbortController();
+    const events: GenerateEvent[] = [];
+    const result = await s.resolveSpec("/plants", {}, (e) => {
+      events.push(e);
+      if (e.type === "delta") controller.abort();
+    }, { signal: controller.signal });
+    expect(result.ok).toBe(false);
+    expect(model.doStreamCalls.length).toBe(1);
+    expect(events.some((e) => e.type === "retry")).toBe(false);
+  });
+
   it("changes the cache key when inputs change", () => {
     const base = { intentSource: "a", catalogHash: "c", toolsHash: toolsHash([]) };
     expect(cacheKey(base)).toBe(cacheKey({ ...base }));

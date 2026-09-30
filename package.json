@@ -5,7 +5,7 @@
   "packageManager": "pnpm@10.33.0",
   "scripts": {
     "build": "tsc -b packages/core packages/catalog-basic packages/react packages/server packages/vite packages/cli && cp packages/catalog-basic/src/styles.css packages/catalog-basic/dist/",
-    "typecheck": "pnpm build && tsc -p examples/greenhouse --noEmit",
+    "typecheck": "pnpm build && tsc -p examples/greenhouse",
     "test": "vitest run",
     "clean": "rm -rf packages/*/dist packages/*/tsconfig.tsbuildinfo"
   },

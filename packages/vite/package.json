@@ -4,11 +4,31 @@
   "type": "module",
   "license": "Apache-2.0",
   "exports": {
-    ".": { "types": "./dist/index.d.ts", "import": "./dist/index.js" }
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./node": {
+      "types": "./dist/node.d.ts",
+      "import": "./dist/node.js"
+    },
+    "./client": {
+      "types": "./client.d.ts"
+    }
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
-  "files": ["dist"],
-  "dependencies": { "@mirage/server": "workspace:*", "@hono/node-server": "^1.19.0" },
-  "peerDependencies": { "vite": "^7.0.0" }
+  "files": [
+    "dist",
+    "client.d.ts"
+  ],
+  "dependencies": {
+    "@hono/node-server": "^1.19.0",
+    "@mirage/core": "workspace:*",
+    "@mirage/server": "workspace:*",
+    "hono": "^4.9.0"
+  },
+  "peerDependencies": {
+    "vite": "^7.0.0"
+  }
 }

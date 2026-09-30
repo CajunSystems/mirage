@@ -28,6 +28,7 @@
 }
 body { margin: 0; background: var(--mi-bg); color: var(--mi-text); font: 15px/1.5 var(--mi-font); }
 .mi-stack { display: flex; flex-direction: column; }
+.mi-stack > .mi-button, .mi-stack > .mi-badge { align-self: flex-start; }
 .mi-row { display: flex; flex-wrap: wrap; align-items: center; }
 .mi-gap-sm { gap: var(--mi-space-sm); }
 .mi-gap-md { gap: var(--mi-space-md); }

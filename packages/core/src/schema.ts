@@ -3,7 +3,10 @@ import { z as zod } from "zod";
 /** Kinds of props that Mirage treats specially. */
 export type MirageKind = "ref" | "action";
 
-const kinds = new WeakMap<zod.ZodType, MirageKind>();
+// A global symbol, not a module-level WeakMap: the catalog may be loaded through a different
+// copy of this module (for example Vite's SSR loader) than the code that inspects it.
+const KIND = Symbol.for("mirage.kind");
+type Tagged = { [KIND]?: MirageKind };
 
 // ---- Bindings ---------------------------------------------------------------
 
@@ -59,14 +62,14 @@ export function ref() {
   const schema = BindingSchema.meta({
     description: "Binding: {\"$data\": name, \"path\"?: field} | {\"$state\": path} | {\"$param\": name}",
   });
-  kinds.set(schema, "ref");
+  (schema as Tagged)[KIND] = "ref";
   return schema;
 }
 
 /** A prop that holds an action object. The component receives a function `(event?) => void`. */
 export function action() {
   const schema = ActionSchema.meta({ description: "Action object ($action: tool | navigate | setState)" });
-  kinds.set(schema, "action");
+  (schema as Tagged)[KIND] = "action";
   return schema;
 }
 
@@ -74,7 +77,7 @@ export function action() {
 export function kindOf(schema: zod.ZodType): MirageKind | undefined {
   let current: zod.ZodType | undefined = schema;
   for (let i = 0; current && i < 8; i++) {
-    const kind = kinds.get(current);
+    const kind = (current as Tagged)[KIND];
     if (kind) return kind;
     const inner: zod.ZodType | undefined = (current as unknown as { _zod: { def: { innerType?: zod.ZodType } } })._zod.def
       .innerType;
