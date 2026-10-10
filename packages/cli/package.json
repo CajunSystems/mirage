@@ -1,6 +1,6 @@
 {
   "name": "@cajunsystems/mirage-cli",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "The mirage CLI: dev, build, lock, regen, eject, eval and init.",
   "keywords": [
     "mirage",
