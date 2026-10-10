@@ -79,6 +79,16 @@ describe("useGeneratedSpec", () => {
     await waitFor(() => expect(screen.getByTestId("out").textContent).toContain('"status":"error"'));
   });
 
+  it("previews fenced model output while it streams", async () => {
+    // No spec event: the error state keeps the last streamed preview, so it can be inspected.
+    vi.stubGlobal("fetch", async () =>
+      streamResponse([{ type: "delta", text: '```json\n{"version":1,"root":"page","elements":{"a":{"type":"Stack"},"b":{"type":"Te' }]),
+    );
+    render(<Probe />);
+    await waitFor(() => expect(screen.getByTestId("out").textContent).toContain('"status":"error"'));
+    expect(JSON.parse(screen.getByTestId("out").textContent!)).toEqual({ status: "error", root: "page", ids: ["a"] });
+  });
+
   it("surfaces errors", async () => {
     vi.stubGlobal("fetch", async () => streamResponse([{ type: "error", message: "nope", errors: [{ path: "root", message: "bad" }] }]));
     render(<Probe />);

@@ -11,7 +11,7 @@ export const IntentFrontmatterSchema = z
     catalog: z.array(z.string()).optional(),
     /** Generate a separate spec per param value (param values join the cache key). */
     specPerParams: z.boolean().default(false),
-    /** Most specs generated per route by one server process (bounds specPerParams and live mode). */
+    /** Most model generations per route per hour, per server process (bounds specPerParams and live mode). */
     maxSpecs: z.number().int().positive().default(100),
     /** Live mode only: seconds an in-memory spec is reused. */
     ttl: z.number().nonnegative().default(60),

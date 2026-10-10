@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { defineCatalog, defineTool, isSafePath, toolSignature, validateSpec, z, type Spec } from "@mirage/core";
+import { defineCatalog, defineTool, isSafePath, stripJsonFence, toolSignature, validateSpec, z, type Spec } from "@mirage/core";
 
 const Noop = () => null;
 const catalog = defineCatalog({
@@ -18,8 +18,8 @@ const catalog = defineCatalog({
 });
 
 const tools = {
-  listPlants: { mutation: false },
-  addPlant: { mutation: true },
+  listPlants: { mutation: false, input: z.object({ query: z.string().optional(), limit: z.number().optional() }) },
+  addPlant: { mutation: true, input: z.object({ name: z.string() }) },
 };
 
 const good: Spec = {
@@ -146,6 +146,33 @@ describe("validateSpec", () => {
   });
 });
 
+describe("validateSpec: tool args and reachability", () => {
+  it("rejects literal tool args that do not match the tool's input schema", () => {
+    const s = clone();
+    s.data.plants.args.limit = "ten";
+    expect(errorsOf(s)).toEqual([{ path: "data.plants.args.limit", message: expect.stringMatching(/number/) }]);
+  });
+
+  it("checks action args too, including missing required ones", () => {
+    const s = clone();
+    s.elements.add.props.onPress.args = {};
+    expect(errorsOf(s)).toEqual([{ path: "elements.add.props.onPress.args.name", message: expect.any(String) }]);
+  });
+
+  it("does not type-check args that are bindings or event values", () => {
+    const s = clone();
+    s.elements.add.props.onPress.args = { name: { $event: "name" } };
+    s.data.plants.args.limit = { $state: "search" };
+    expect(check(s).ok).toBe(true);
+  });
+
+  it("reports elements that are not reachable from root", () => {
+    const s = clone();
+    s.elements.orphan = { type: "Heading", props: { text: "Lost" } };
+    expect(errorsOf(s)).toEqual([{ path: "elements.orphan", message: expect.stringMatching(/not reachable from root/) }]);
+  });
+});
+
 describe("schemas", () => {
   it("describe() is stable", () => {
     expect(catalog.describe()).toMatchSnapshot();
@@ -171,5 +198,20 @@ describe("schemas", () => {
     const sig = toolSignature("listPlants", tool);
     expect(JSON.stringify(sig)).not.toContain("handler");
     expect(sig).toMatchSnapshot();
+  });
+});
+
+describe("stripJsonFence", () => {
+  it("removes a complete or still-streaming Markdown fence", () => {
+    expect(stripJsonFence('{"a":1}')).toBe('{"a":1}');
+    expect(stripJsonFence('```json\n{"a":1}\n```')).toBe('{"a":1}');
+    expect(stripJsonFence('```\n{"a":1}\n```\n')).toBe('{"a":1}');
+    expect(stripJsonFence('```json\n{"a":')).toBe('{"a":');
+    expect(stripJsonFence('```json\n{"a":1}\n`')).toBe('{"a":1}');
+    expect(stripJsonFence("```js")).toBe("");
+  });
+
+  it("leaves backticks inside the JSON alone", () => {
+    expect(stripJsonFence('{"code":"```"}')).toBe('{"code":"```"}');
   });
 });

@@ -1,12 +1,13 @@
-import { jsonSchema, Output, streamText, type LanguageModel } from "ai";
-import { z } from "zod";
-import { validateSpec, type Catalog, type Spec, type ToolSignature, type ValidationError } from "@mirage/core";
+import { streamText, type LanguageModel } from "ai";
+import { stripJsonFence, validateSpec, type Catalog, type Spec, type ToolSignature, type ValidateOptions, type ValidationError } from "@mirage/core";
 import { buildPrompt, type PromptInput } from "./prompt.js";
 
 export type GenerateOptions = {
   model: LanguageModel;
   catalog: Catalog;
   tools: ToolSignature[];
+  /** The route's tool definitions, so generated args are checked against each tool's input schema. */
+  toolDefs?: ValidateOptions["tools"];
   intent: PromptInput["intent"];
   route: PromptInput["route"];
   /** Repair attempts after the first try. Default 2. */
@@ -16,13 +17,14 @@ export type GenerateOptions = {
   abortSignal?: AbortSignal;
 };
 
-export type GenerateResult = { ok: true; spec: Spec; attempts: number } | { ok: false; errors: ValidationError[]; attempts: number };
+export type GenerateResult =
+  | { ok: true; spec: Spec; attempts: number }
+  | { ok: false; errors: ValidationError[]; attempts: number; aborted?: true };
 
 /** Streams a spec from the model, validates it, and retries with the errors (up to `maxRepairs` times). */
 export async function generateSpec(options: GenerateOptions): Promise<GenerateResult> {
   const { model, catalog, tools, intent, route, maxRepairs = 2 } = options;
-  const schema = jsonSchema(z.toJSONSchema(catalog.specSchema, { unrepresentable: "any" }) as Parameters<typeof jsonSchema>[0]);
-  const toolMap = Object.fromEntries(tools.map((t) => [t.name, t]));
+  const toolMap = options.toolDefs ?? Object.fromEntries(tools.map((t) => [t.name, { mutation: t.mutation }]));
   let repair: PromptInput["repair"];
   let errors: ValidationError[] = [];
 
@@ -33,7 +35,9 @@ export async function generateSpec(options: GenerateOptions): Promise<GenerateRe
       model,
       system,
       prompt,
-      output: Output.object({ schema, name: "mirage_spec" }),
+      // Plain text, no provider-side schema: constrained decoding cannot express the spec's id-keyed
+      // maps (Anthropic forces them empty). The prompt carries every component and tool schema, and
+      // validateSpec plus the repair loop enforce them.
       abortSignal: options.abortSignal,
       onError: () => {}, // surfaced through fullStream below
     });
@@ -49,11 +53,11 @@ export async function generateSpec(options: GenerateOptions): Promise<GenerateRe
     }
 
     if (options.abortSignal?.aborted) {
-      return { ok: false, errors: [{ path: "(root)", message: "generation aborted" }], attempts: attempt };
+      return { ok: false, errors: [{ path: "(root)", message: "generation aborted" }], attempts: attempt, aborted: true };
     }
     let parsed: unknown;
     try {
-      parsed = JSON.parse(text);
+      parsed = JSON.parse(stripJsonFence(text));
     } catch (error) {
       errors = [{ path: "(root)", message: `output is not valid JSON: ${(error as Error).message}` }];
       repair = { errors, previous: text };

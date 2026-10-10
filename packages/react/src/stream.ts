@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import type { GenerateEvent, PartialSpec, Spec, ValidationError } from "@mirage/core";
+import { stripJsonFence, type GenerateEvent, type PartialSpec, type Spec, type ValidationError } from "@mirage/core";
 import { parsePartialJson } from "./partial-json.js";
 
 export type SpecStatus =
@@ -79,7 +79,7 @@ export function useGeneratedSpec(route: string, params: Record<string, string>, 
       else if (e.type === "error") setState({ status: "error", spec: latest, message: e.message, errors: e.errors });
       else if (e.type === "delta") {
         text += e.text;
-        const value = parsePartialJson(text);
+        const value = parsePartialJson(stripJsonFence(text));
         if (!value || typeof value !== "object") return;
         latest = settle(value as PartialSpec);
         setState({ status: "streaming", spec: latest });

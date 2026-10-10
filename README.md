@@ -12,7 +12,7 @@ pnpm dev                     # http://localhost:5173
 
 The example is a greenhouse plant tracker. It has a daily watering overview, a searchable plant list with a "New plant" form, and a care page for each plant. Every page has a committed `page.spec.json`, so it runs without an API key. Set `ANTHROPIC_API_KEY` and delete a spec (`mirage unlock /plants`) to watch that page generate and stream in.
 
-Design decisions and deviations from the original brief are recorded in [`docs/decisions.md`](docs/decisions.md).
+Design decisions and deviations from the original brief are recorded in [`docs/decisions.md`](docs/decisions.md). The build order, what shipped in v1, and what comes next are in [`docs/milestones.md`](docs/milestones.md).
 
 ---
 
@@ -107,7 +107,7 @@ A searchable list of every plant in the greenhouse.
 - Keep it dense and calm. No decorative elements.
 ```
 
-Frontmatter keys: `title`, `mode`, `params` (for example `{ id: string }`, informational for the model), `catalog`, `specPerParams` (use a separate spec for each param value), `maxSpecs` (the cap on specs generated per route, default 100), and `ttl` (the reuse window for live pages, in seconds).
+Frontmatter keys: `title`, `mode`, `params` (for example `{ id: string }`, informational for the model), `catalog`, `specPerParams` (use a separate spec for each param value), `maxSpecs` (the cap on model generations per route per hour, default 100), and `ttl` (the reuse window for live pages, in seconds).
 
 Rules:
 - The body is free-form. It is passed verbatim to the model as the page brief.
@@ -256,7 +256,7 @@ export const waterPlant = defineTool({
 
 - `POST /__mirage/generate` with `{ route, params }` returns an NDJSON stream of `delta`, `retry`, `spec`, and `error` events.
 - `buildPrompt(input) => { system, prompt }` is a pure function covering the rules, the catalog (the intent's subset, if one is set), the visible tool signatures, the intent, the route, and, on retries, the validation errors from the previous attempt.
-- Generation uses AI SDK `streamText` with `Output.object` and the catalog's JSON Schema. The result is validated against the schema and then semantically: the root exists, children exist, there are no cycles, and all tools, `$data` names, `$state` roots, and `$param` names exist. On failure Mirage retries up to twice with the errors, then reports them.
+- Generation uses AI SDK `streamText` with plain text output. The prompt lists every component's and tool's JSON Schema; no schema is sent as a provider-side constraint (see `docs/decisions.md`). The result is validated against the schema and then semantically: the root exists, children exist, there are no cycles, all tools, `$data` names, `$state` roots, and `$param` names exist, every element is reachable from the root, and literal tool args match each tool's input schema (args that are bindings or `$event` values are checked at call time). On failure Mirage retries up to twice with the errors, then reports them.
 
 ```ts
 // mirage.config.ts
@@ -291,6 +291,24 @@ CLI:
 - `mirage regen <route> [--write]`: generates again, ignoring caches, and prints a diff against `page.spec.json`.
 - `mirage eject <route> [--keep-intent]`: writes a `page.tsx` that renders the same tree with plain JSX.
 - `mirage init [dir]`: scaffolds a new app.
+- `mirage eval [route] [--runs n] [--record file] [--report file]`: generates each route `n` times (default 3), ignoring caches, and reports how many specs were valid on the first try, valid after repair, or failed, with the most common validation errors and token use. It writes nothing to the cache and exits non-zero if any run ends without a valid spec. `--record` saves the model responses from successful runs.
+
+### Testing against real model output
+
+`mirage eval --record` writes a recording: model responses keyed by a hash of the prompt. `replayModel(recording)` from `@mirage/server` is a model that answers from it, so tests exercise real generation (streaming, repairs, validation) without a model or API key:
+
+```ts
+import { readFileSync } from "node:fs";
+import { defineConfig, replayModel } from "@mirage/server";
+
+export default defineConfig({
+  model: replayModel(JSON.parse(readFileSync("./fixtures/app.recording.json", "utf8"))),
+});
+```
+
+The prompt includes the intent, catalog and tool signatures, so changing any of them makes the recording stale. Replay then fails with a message to re-record rather than serving an outdated answer. `recordingModel(model, onRecord)` is the wrapper `eval` uses, for custom harnesses.
+
+In this repo, `pnpm e2e` runs the Playwright suite in `e2e/` twice: against the production build with committed specs, and (once `e2e/fixtures/greenhouse.recording.json` exists) against a copy with no committed specs that generates every page from the recording. `pnpm eval` and `pnpm eval:record` run `mirage eval` on the greenhouse example; both need `ANTHROPIC_API_KEY`, which the example's config reads from the environment or from a gitignored `examples/greenhouse/.env`.
 
 ---
 
@@ -308,6 +326,7 @@ examples/
   greenhouse/      plant tracker: overview, list + new-plant form, per-plant care page
 docs/
   decisions.md
+  milestones.md
 ```
 
 Package names are placeholders (`@mirage/*`). The unscoped name `mirage` is taken on npm by Mirage JS, so pick the final scope before publishing.
@@ -328,7 +347,10 @@ pnpm typecheck    # packages + the example app
 - The spec is data. No code path evaluates strings from the model.
 - Tools are an allowlist per route. Every call is validated again on the server with zod, whatever the client sends.
 - `navigate` accepts same-origin paths only (control characters and backslashes are rejected), and this is checked both when validating the spec and at dispatch.
-- Route params sent to the generate endpoint are validated, and each route has a cap on generated specs.
+- Both endpoints accept only `Content-Type: application/json`, so a cross-origin request always needs a CORS preflight, which Mirage never approves. Requests a browser marks `Sec-Fetch-Site: cross-site` or `same-site` are rejected. This protects tools that rely on cookies in `context()` from CSRF.
+- Route params sent to either endpoint are validated, and each route has a cap on model generations per hour. Concurrent requests for the same spec share one model call.
+- Committed and cached specs are validated before they are served; `mirage build` fails on an invalid `page.spec.json`.
+- In production, unexpected errors (provider errors, file errors) reach the client only as "Generation failed" or "Tool failed"; the details go to the server log.
 - Tool output that fails its output schema is never sent to the client.
 - Model output never reaches `dangerouslySetInnerHTML`. Catalog components treat all string props as text.
 - The tool `ctx` is built on the server from the real request.

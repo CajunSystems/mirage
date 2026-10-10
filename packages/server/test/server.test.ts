@@ -1,8 +1,8 @@
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { MockLanguageModelV4, convertArrayToReadableStream } from "ai/test";
 import type { GenerateEvent, Spec } from "@mirage/core";
 import { basicCatalog } from "@mirage/catalog-basic";
@@ -11,6 +11,12 @@ import {
   cacheKey,
   createMirageServer,
   parseIntent,
+  emptyRecording,
+  findRoute,
+  MemoryCache,
+  type RouteInfo,
+  recordingModel,
+  replayModel,
   scanRoutes,
   toolsHash,
   type MirageConfig,
@@ -164,9 +170,10 @@ describe("generation", () => {
     const s = server({});
     expect((await generate(s, "/locked")).at(-1)).toMatchObject({ type: "error", message: expect.stringMatching(/mirage lock/) });
     const specPath = join(appDir, "locked", "page.spec.json");
-    writeFileSync(specPath, JSON.stringify(validSpec));
+    const locked: Spec = { version: 1, root: "t", elements: { t: { type: "Heading", props: { text: "Locked" } } } };
+    writeFileSync(specPath, JSON.stringify(locked));
     try {
-      expect(await generate(s, "/locked")).toEqual([{ type: "spec", spec: validSpec, source: "locked" }]);
+      expect(await generate(s, "/locked")).toEqual([{ type: "spec", spec: locked, source: "locked" }]);
     } finally {
       rmSync(specPath);
     }
@@ -271,7 +278,7 @@ describe("tools endpoint", () => {
     const s = server({});
     expect((await callTool(s, "listPlants", { route: "/", args: {} })).status).toBe(404);
     expect(await (await callTool(s, "ping", { route: "/", args: {} })).json()).toEqual({ result: "global" });
-    expect(await (await callTool(s, "ping", { route: "/plants/:id", args: {} })).json()).toEqual({ result: "route" });
+    expect(await (await callTool(s, "ping", { route: "/plants/:id", params: { id: "p1" }, args: {} })).json()).toEqual({ result: "route" });
   });
 
   it("never returns output that fails the output schema", async () => {
@@ -289,5 +296,193 @@ describe("tools endpoint", () => {
       body: JSON.stringify({ route: "/" }),
     });
     expect(await res.json()).toEqual({ result: "ada" });
+  });
+});
+
+describe("record and replay", () => {
+  it("replays a recorded generation, repair turns included, without calling a model", async () => {
+    const model = mockModel([invalidSpec, validSpec]);
+    const recording = emptyRecording();
+    const recorded = await server({ model }).resolveSpec("/plants", {}, () => {}, {
+      force: true,
+      wrapModel: (m) => recordingModel(m, (call) => (recording.responses[call.key] = { route: "/plants", text: call.text })),
+    });
+    expect(recorded).toMatchObject({ ok: true, spec: validSpec });
+    expect(Object.keys(recording.responses)).toHaveLength(2);
+    rmSync(cacheDir, { recursive: true, force: true }); // the recording run cached its spec
+
+    const events = await generate(server({ model: replayModel(recording) }), "/plants");
+    expect(events.filter((e) => e.type === "retry")).toHaveLength(1);
+    expect(events.at(-1)).toEqual({ type: "spec", spec: validSpec, source: "generated" });
+    expect(model.doStreamCalls.length).toBe(2);
+  });
+
+  it("does not cache a generation when writeCache is false", async () => {
+    const model = mockModel([validSpec, validSpec]);
+    const s = server({ model });
+    expect(await s.resolveSpec("/plants", {}, () => {}, { force: true, writeCache: false })).toMatchObject({ ok: true });
+    expect((await generate(s, "/plants")).at(-1)).toMatchObject({ type: "spec", source: "generated" });
+    expect(model.doStreamCalls.length).toBe(2);
+  });
+
+  it("fails loudly when the prompt was not recorded", async () => {
+    const events = await generate(server({ model: replayModel(emptyRecording()) }), "/plants");
+    expect(events.at(-1)).toMatchObject({ type: "error", message: expect.stringContaining("mirage eval --record") });
+  });
+});
+
+describe("hardening (follow-up review on #2)", () => {
+  const post = (s: ReturnType<typeof server>, url: string, body: object, headers: Record<string, string> = {}) =>
+    s.app.request(url, { method: "POST", headers: { "content-type": "application/json", ...headers }, body: JSON.stringify(body) });
+  const plain: Spec = { version: 1, root: "t", elements: { t: { type: "Heading", props: { text: "Hi" } } } };
+
+  async function withIntent(dir: string[], edit: (src: string) => string, fn: () => Promise<void>) {
+    const intentPath = join(appDir, ...dir, "page.intent.md");
+    const original = readFileSync(intentPath, "utf8");
+    writeFileSync(intentPath, edit(original));
+    try {
+      await fn();
+    } finally {
+      writeFileSync(intentPath, original);
+    }
+  }
+
+  // 1. CSRF
+  it("rejects tool and generate requests that are not JSON (CORS-simple requests)", async () => {
+    const s = server({ model: mockModel([plain]) });
+    for (const url of ["/__mirage/tools/whoami", "/__mirage/generate"]) {
+      const res = await post(s, url, { route: "/", params: {}, args: {} }, { "content-type": "text/plain" });
+      expect(res.status).toBe(415);
+    }
+  });
+
+  it("rejects cross-site tool and generate requests", async () => {
+    const s = server({ model: mockModel([plain]) });
+    for (const site of ["cross-site", "same-site"]) {
+      for (const url of ["/__mirage/tools/whoami", "/__mirage/generate"]) {
+        expect((await post(s, url, { route: "/", params: {}, args: {} }, { "sec-fetch-site": site })).status).toBe(403);
+      }
+    }
+    expect((await post(s, "/__mirage/tools/whoami", { route: "/", params: {}, args: {} }, { "sec-fetch-site": "same-origin" })).status).toBe(200);
+  });
+
+  // 3. params on the tool endpoint
+  it("validates params on the tool endpoint like the generate endpoint", async () => {
+    const s = server({});
+    for (const params of [{ id: 5 }, { id: "p1", extra: "x" }, {}, "p1"]) {
+      expect((await post(s, "/__mirage/tools/ping", { route: "/plants/:id", params, args: {} })).status).toBe(400);
+    }
+    expect((await post(s, "/__mirage/tools/ping", { route: "/plants/:id", params: { id: "p1" }, args: {} })).status).toBe(200);
+  });
+
+  // 4. error redaction
+  it("does not stream raw error messages in production", async () => {
+    const model = new MockLanguageModelV4({
+      doStream: async () => {
+        throw new Error("401 invalid x-api-key sk-secret at /srv/app");
+      },
+    });
+    const events = await generate(server({ model }, false), "/plants");
+    expect(events.at(-1)).toEqual({ type: "error", message: "Generation failed" });
+  });
+
+  // 5. locked and cached specs are validated
+  it("reports a corrupt or invalid page.spec.json clearly instead of serving it", async () => {
+    const s = server({});
+    const specPath = join(appDir, "locked", "page.spec.json");
+    try {
+      writeFileSync(specPath, "{ not json");
+      expect((await generate(s, "/locked")).at(-1)).toMatchObject({ type: "error", message: expect.stringMatching(/page\.spec\.json is not valid JSON/) });
+      writeFileSync(specPath, JSON.stringify(validSpec)); // listPlants is not available on /locked
+      expect((await generate(s, "/locked")).at(-1)).toMatchObject({
+        type: "error",
+        message: expect.stringMatching(/page\.spec\.json is invalid/),
+        errors: [{ message: 'unknown tool "listPlants"' }],
+      });
+    } finally {
+      rmSync(specPath);
+    }
+  });
+
+  it("regenerates when a cached spec is no longer valid", async () => {
+    const model = mockModel([validSpec, validSpec]);
+    const s = server({ model });
+    await generate(s, "/plants");
+    for (const f of readdirSync(cacheDir)) writeFileSync(join(cacheDir, f), JSON.stringify({ ...validSpec, root: "gone" }));
+    expect((await generate(s, "/plants")).at(-1)).toMatchObject({ type: "spec", source: "generated" });
+    expect(model.doStreamCalls.length).toBe(2);
+  });
+
+  // 6. dedupe and bounded regeneration
+  it("shares one model call between concurrent requests for the same spec", async () => {
+    const model = mockModel([validSpec, validSpec]);
+    const s = server({ model });
+    const [a, b] = await Promise.all([generate(s, "/plants"), generate(s, "/plants")]);
+    expect(a.at(-1)).toMatchObject({ type: "spec", spec: validSpec });
+    expect(b.at(-1)).toMatchObject({ type: "spec", spec: validSpec });
+    expect(model.doStreamCalls.length).toBe(1);
+  });
+
+  it("lets a waiting request generate its own spec when the shared one was aborted", async () => {
+    const model = mockModel([validSpec, validSpec]);
+    const s = server({ model });
+    const controller = new AbortController();
+    // The second request starts while the first one's generation is streaming, then the first aborts.
+    let second: ReturnType<typeof s.resolveSpec> | undefined;
+    const first = await s.resolveSpec(
+      "/plants",
+      {},
+      (e) => {
+        if (e.type !== "delta" || second) return;
+        second = s.resolveSpec("/plants", {}, () => {});
+        controller.abort();
+      },
+      { signal: controller.signal },
+    );
+    expect(first.ok).toBe(false);
+    expect(await second).toMatchObject({ ok: true, spec: validSpec });
+    expect(model.doStreamCalls.length).toBe(2);
+  });
+
+  it("bounds regeneration of the same key (live mode with ttl 0)", async () => {
+    await withIntent(["plants", "[id]"], (src) => src.replace("mode: live", "mode: live\nttl: 0\nmaxSpecs: 2"), async () => {
+      const model = mockModel([validSpec, validSpec, validSpec]);
+      const s = server({ model });
+      for (let i = 0; i < 2; i++) await generate(s, "/plants/:id", { id: "p1" });
+      expect((await generate(s, "/plants/:id", { id: "p1" })).at(-1)).toMatchObject({ type: "error", message: expect.stringMatching(/limit/) });
+      expect(model.doStreamCalls.length).toBe(2);
+    });
+  });
+
+  // 7. specPerParams
+  it("gives the model the param values when specs are generated per param value", async () => {
+    await withIntent(["plants", "[id]"], (src) => src.replace("mode: live", "mode: cached\nspecPerParams: true"), async () => {
+      const model = mockModel([validSpec]);
+      await generate(server({ model }), "/plants/:id", { id: "basil" });
+      expect(JSON.stringify(model.doStreamCalls[0]!.prompt)).toContain("basil");
+    });
+  });
+
+  // 8. route matching
+  it("prefers a static route over a dynamic sibling", () => {
+    const r = (path: string) => ({ path }) as RouteInfo;
+    const routes = [r("/plants/:id"), r("/plants/new"), r("/plants/:id/edit"), r("/plants/new/edit")];
+    expect(findRoute(routes, "/plants/new")?.path).toBe("/plants/new");
+    expect(findRoute(routes, "/plants/new/edit")?.path).toBe("/plants/new/edit");
+    expect(findRoute(routes, "/plants/basil")?.path).toBe("/plants/:id");
+  });
+
+  // 9. MemoryCache eviction
+  it("evicts expired live-mode entries without waiting for a read", () => {
+    vi.useFakeTimers();
+    try {
+      const cache = new MemoryCache();
+      for (let i = 0; i < 50; i++) cache.set(`k${i}`, plain, 1);
+      vi.advanceTimersByTime(2000);
+      cache.set("fresh", plain, 60);
+      expect(cache.size).toBe(1);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

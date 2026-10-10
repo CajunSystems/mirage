@@ -1,13 +1,14 @@
+import type { z } from "zod";
 import type { Catalog } from "./catalog.js";
-import { isAction, isDataRef, isParamRef, isSafePath, isStateRef, type Action, type Effect, type Spec } from "./spec.js";
+import { isAction, isBinding, isDataRef, isEventRef, isParamRef, isSafePath, isStateRef, type Action, type Effect, type Spec } from "./spec.js";
 
 export type ValidationError = { path: string; message: string };
 export type ValidationResult = { ok: true; spec: Spec } | { ok: false; errors: ValidationError[] };
 
 export type ValidateOptions = {
   catalog: Catalog;
-  /** Tools visible to the route. Omit to skip tool checks. */
-  tools?: Record<string, { mutation?: boolean }>;
+  /** Tools visible to the route. Omit to skip tool checks. With `input`, literal args are checked against it. */
+  tools?: Record<string, { mutation?: boolean; input?: z.ZodType }>;
   /** Route param names. Omit to skip `$param` checks. */
   params?: readonly string[];
 };
@@ -59,6 +60,19 @@ export function validateSpec(input: unknown, options: ValidateOptions): Validati
   };
   for (const id of Object.keys(spec.elements)) visit(id, []);
 
+  // Every element must be reachable from root; the renderer would silently drop the rest.
+  if (spec.elements[spec.root]) {
+    const reachable = new Set<string>();
+    const queue = [spec.root];
+    while (queue.length) {
+      const id = queue.pop()!;
+      if (reachable.has(id)) continue;
+      reachable.add(id);
+      for (const child of spec.elements[id]?.children ?? []) if (spec.elements[child]) queue.push(child);
+    }
+    for (const id of Object.keys(spec.elements)) if (!reachable.has(id)) err(["elements", id], `element "${id}" is not reachable from root`);
+  }
+
   // Collect writable state roots (setState actions and effects).
   const writable = new Set(Object.keys(spec.state ?? {}));
   walk(spec, [], (obj) => {
@@ -72,10 +86,34 @@ export function validateSpec(input: unknown, options: ValidateOptions): Validati
     if (tools && !tools[name]) err(path, `unknown tool "${name}"`);
   };
 
+  // Literal args are checked against the tool's input schema. Bindings and $event values are only
+  // known at runtime, so they (and anything nested under them) are skipped.
+  const checkArgs = (path: PropertyKey[], name: string, args: Record<string, unknown> | undefined) => {
+    const input = tools?.[name]?.input;
+    if (!input) return;
+    const dynamic: PropertyKey[][] = [];
+    const strip = (value: unknown, at: PropertyKey[]): unknown => {
+      if (isBinding(value) || isEventRef(value)) {
+        dynamic.push(at);
+        return undefined;
+      }
+      if (Array.isArray(value)) return value.map((v, i) => strip(v, [...at, i]));
+      if (value && typeof value === "object") return Object.fromEntries(Object.entries(value).map(([k, v]) => [k, strip(v, [...at, k])]));
+      return value;
+    };
+    const result = input.safeParse(strip(args ?? {}, []));
+    if (result.success) return;
+    for (const issue of result.error.issues) {
+      const covered = dynamic.some((d) => d.every((key, i) => issue.path[i] === key));
+      if (!covered) err([...path, "args", ...issue.path], issue.message);
+    }
+  };
+
   // Data sources: tools exist and are not mutations.
   for (const [name, source] of Object.entries(spec.data ?? {})) {
     checkTool(["data", name, "tool"], source.tool);
     if (tools?.[source.tool]?.mutation) err(["data", name, "tool"], `tool "${source.tool}" is a mutation and cannot be a data source`);
+    else checkArgs(["data", name], source.tool, source.args);
   }
 
   // Bindings and actions anywhere in data, props.
@@ -98,6 +136,7 @@ export function validateSpec(input: unknown, options: ValidateOptions): Validati
   const checkAction = (action: Action, path: PropertyKey[]) => {
     if (action.$action === "tool") {
       checkTool([...path, "name"], action.name);
+      checkArgs(path, action.name, action.args);
       if (action.then) checkEffects(action.then, [...path, "then"]);
     }
     if (action.$action === "navigate" && !isSafePath(action.to)) err([...path, "to"], `navigate must be a same-origin path`);

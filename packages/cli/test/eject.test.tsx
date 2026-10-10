@@ -3,7 +3,7 @@ import { execFileSync } from "node:child_process";
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { cleanup, render, waitFor } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router";
 import type { ComponentType } from "react";
@@ -25,6 +25,10 @@ let catalog: Catalog;
 const realFetch = globalThis.fetch;
 
 beforeAll(async () => {
+  // The example's seed data dates are relative to today; pin the clock so snapshots are stable.
+  // Only Date is faked, so timers (waitFor) still run.
+  vi.useFakeTimers({ toFake: ["Date"] });
+  vi.setSystemTime(new Date("2026-09-30T12:00:00Z"));
   catalog = (await import(join(example, "catalog.ts"))).catalog;
   const server = createMirageServer({
     config: {},
@@ -48,6 +52,7 @@ beforeAll(async () => {
 
 afterAll(() => {
   globalThis.fetch = realFetch;
+  vi.useRealTimers();
   rmSync(outDir, { recursive: true, force: true });
 });
 

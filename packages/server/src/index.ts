@@ -5,3 +5,4 @@ export { generateSpec, type GenerateOptions, type GenerateResult } from "./gener
 export { parseIntent, IntentFrontmatterSchema, IntentError, type Intent, type IntentFrontmatter } from "./intent.js";
 export { scanRoutes, findRoute, INTENT_FILE, SPEC_FILE, type RouteInfo } from "./routes.js";
 export { cacheKey, catalogHash, toolsHash, SpecCache, MemoryCache, GENERATOR_VERSION } from "./cache.js";
+export { recordingModel, replayModel, promptKey, emptyRecording, type Recording, type RecordedCall } from "./recording.js";

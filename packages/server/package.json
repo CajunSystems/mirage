@@ -4,10 +4,22 @@
   "type": "module",
   "license": "Apache-2.0",
   "exports": {
-    ".": { "types": "./dist/index.d.ts", "import": "./dist/index.js" }
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
-  "files": ["dist"],
-  "dependencies": { "@mirage/core": "workspace:*", "ai": "^7.0.0", "gray-matter": "^4.0.3", "hono": "^4.9.0", "zod": "^4.1.0" }
+  "files": [
+    "dist"
+  ],
+  "dependencies": {
+    "@ai-sdk/provider": "4.0.20",
+    "@mirage/core": "workspace:*",
+    "ai": "^7.0.0",
+    "gray-matter": "^4.0.3",
+    "hono": "^4.9.0",
+    "zod": "^4.1.0"
+  }
 }

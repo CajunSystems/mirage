@@ -47,9 +47,13 @@ export class SpecCache {
   }
 }
 
-/** In-memory TTL cache for live mode. */
+/** In-memory TTL cache for live mode. Expired entries are swept on write; the oldest go past `maxEntries`. */
 export class MemoryCache {
   private entries = new Map<string, { spec: Spec; expires: number }>();
+  constructor(private maxEntries = 1000) {}
+  get size() {
+    return this.entries.size;
+  }
   get(key: string): Spec | undefined {
     const hit = this.entries.get(key);
     if (hit && hit.expires > Date.now()) return hit.spec;
@@ -57,6 +61,14 @@ export class MemoryCache {
     return undefined;
   }
   set(key: string, spec: Spec, ttlSeconds: number) {
-    if (ttlSeconds > 0) this.entries.set(key, { spec, expires: Date.now() + ttlSeconds * 1000 });
+    const now = Date.now();
+    for (const [k, entry] of this.entries) if (entry.expires <= now) this.entries.delete(k);
+    if (ttlSeconds <= 0) return;
+    this.entries.delete(key); // re-insert so Map order stays oldest-first
+    this.entries.set(key, { spec, expires: now + ttlSeconds * 1000 });
+    for (const k of this.entries.keys()) {
+      if (this.entries.size <= this.maxEntries) break;
+      this.entries.delete(k);
+    }
   }
 }
