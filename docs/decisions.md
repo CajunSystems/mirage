@@ -30,6 +30,14 @@ Choices made while building v1, including answers to the open questions in the R
 - **`mirage eject`** removes both `page.intent.md` and `page.spec.json` (keep both with `--keep-intent`). When a route has both a `page.tsx` and an intent, the `page.tsx` wins.
 - **Routes are eagerly imported** in `virtual:mirage/routes` (layouts, committed specs, ejected pages). Code splitting per route is a later optimization.
 
+## Model evaluation (M7)
+
+- **Recordings are keyed by a hash of the prompt messages**, not by route or call order. Replay is then exact for every prompt that was recorded, including repair turns (whose prompt contains the previous output and its errors), and a stale recording fails loudly. The prompt contains no file paths, so a recording made in one checkout replays in another.
+- **`mirage eval --record` keeps only successful runs.** Replaying a recording therefore never reproduces a failed generation. When a route is run several times, the last successful run's responses win.
+- **The replay E2E run uses a copy of the example** (`examples/greenhouse/.e2e/replay`, gitignored) with the committed specs removed, rather than a flag that makes Mirage ignore committed specs. No framework code exists only for tests. The copy sits inside the example so its imports resolve from the example's `node_modules`.
+- **E2E assertions follow the intents, not the layout.** The same suite runs against committed and generated specs, which may differ in structure.
+- Results against real providers: _pending (needs an API key; see `docs/milestones.md`, M7)._
+
 ## Production
 
 `mirage build` produces `dist/client` (Vite) and `dist/server/index.js`. The server bundle contains the app's config, catalog, tools, intents, and specs. Packages stay external. The server serves the client, the tools endpoint, and generation. Committed specs are inlined into the client, so locked routes never call `/__mirage/generate` and need no model or API key.

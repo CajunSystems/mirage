@@ -1,6 +1,7 @@
 import { existsSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 import { Hono } from "hono";
+import type { LanguageModel } from "ai";
 import {
   toolSignature,
   toolsFromModule,
@@ -36,6 +37,8 @@ export type ResolveOptions = {
   force?: boolean;
   /** Allow generating for `mode: locked` routes that have no page.spec.json (for `mirage lock` / `eject`). */
   allowLocked?: boolean;
+  /** Wraps the configured model for this call (for `mirage eval`, which records responses and usage). */
+  wrapModel?: (model: LanguageModel) => LanguageModel;
   signal?: AbortSignal;
 };
 
@@ -141,7 +144,7 @@ export function createMirageServer(options: MirageServerOptions) {
       }
       log(`generating ${info.path}`);
       const result = await generateSpec({
-        model: config.model,
+        model: opts.wrapModel ? opts.wrapModel(config.model) : config.model,
         catalog: pageCatalog,
         tools,
         intent,

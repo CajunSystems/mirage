@@ -11,6 +11,9 @@ import {
   cacheKey,
   createMirageServer,
   parseIntent,
+  emptyRecording,
+  recordingModel,
+  replayModel,
   scanRoutes,
   toolsHash,
   type MirageConfig,
@@ -289,5 +292,29 @@ describe("tools endpoint", () => {
       body: JSON.stringify({ route: "/" }),
     });
     expect(await res.json()).toEqual({ result: "ada" });
+  });
+});
+
+describe("record and replay", () => {
+  it("replays a recorded generation, repair turns included, without calling a model", async () => {
+    const model = mockModel([invalidSpec, validSpec]);
+    const recording = emptyRecording();
+    const recorded = await server({ model }).resolveSpec("/plants", {}, () => {}, {
+      force: true,
+      wrapModel: (m) => recordingModel(m, (call) => (recording.responses[call.key] = { route: "/plants", text: call.text })),
+    });
+    expect(recorded).toMatchObject({ ok: true, spec: validSpec });
+    expect(Object.keys(recording.responses)).toHaveLength(2);
+    rmSync(cacheDir, { recursive: true, force: true }); // the recording run cached its spec
+
+    const events = await generate(server({ model: replayModel(recording) }), "/plants");
+    expect(events.filter((e) => e.type === "retry")).toHaveLength(1);
+    expect(events.at(-1)).toEqual({ type: "spec", spec: validSpec, source: "generated" });
+    expect(model.doStreamCalls.length).toBe(2);
+  });
+
+  it("fails loudly when the prompt was not recorded", async () => {
+    const events = await generate(server({ model: replayModel(emptyRecording()) }), "/plants");
+    expect(events.at(-1)).toMatchObject({ type: "error", message: expect.stringContaining("mirage eval --record") });
   });
 });

@@ -10,7 +10,7 @@ The build order for Mirage. Each milestone has a scope and an **Accept** line, a
 | M4: Vite plugin + routing + dev | Done (v1) |
 | M5: Lock / unlock / regen / eject + build | Done (v1) |
 | M6: Polish | Done (v1) |
-| M7: Real-model generation | Next |
+| M7: Real-model generation | In progress: tooling done, real-model run pending an API key |
 | M8: Publishable packages | Planned |
 | M9: Per-route code splitting | Planned |
 | M10: Starter app from `mirage init` | Planned |
@@ -58,6 +58,12 @@ The v1 brief used a clinic example. The repo ships `examples/greenhouse` instead
 - Add an opt-in eval script (for example `pnpm eval`, skipped without an API key) that regenerates each route N times and reports: valid on first try, valid after repair, failed, and mean repairs.
 - Accept: each greenhouse route produces a valid spec on at least one major provider, with first-try validity recorded in `docs/decisions.md`; the E2E suite passes in CI against the recorded fixtures.
 - Needs: an API key in the environment's secrets.
+- Progress:
+  - [x] `recordingModel` / `replayModel` in `@mirage/server`, keyed by prompt hash, with record/replay tests.
+  - [x] `mirage eval [route] --runs n --record file --report file`, plus `pnpm eval` / `pnpm eval:record` for the greenhouse.
+  - [x] Playwright suite in `e2e/`: the `locked` run (production build, committed specs) passes and runs in CI. The `replay` run turns on when the recording exists; checked locally against a throwaway recording that was not committed.
+  - [ ] Record `e2e/fixtures/greenhouse.recording.json` from a real model (`pnpm eval:record`).
+  - [ ] Run `pnpm eval` (several runs per route), tune the prompt and catalog descriptions, and record the results in `decisions.md`.
 
 **M8: Publishable packages**
 - Final package names and scope, `exports`/`files`/`types` fields, peer dependencies (`react`, `react-router`, `ai`, `zod`, `vite`), a changeset-based release flow, and a publish job in CI.

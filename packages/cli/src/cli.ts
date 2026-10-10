@@ -25,6 +25,13 @@ export function run(argv = process.argv) {
     .command("eject <route>", "Emit a page.tsx that renders the spec with plain JSX")
     .option("--keep-intent", "Keep page.intent.md (and page.spec.json)")
     .action((route: string, o) => commands.eject(root(o), route, { keepIntent: o.keepIntent }));
+  cli
+    .command("eval [route]", "Generate each route several times and report how often the model produces a valid spec")
+    .option("--all", "Evaluate every route (the default when no route is given)")
+    .option("--runs <n>", "Generations per route", { default: 3 })
+    .option("--record <file>", "Save responses from successful runs, for replayModel()")
+    .option("--report <file>", "Write per-run results as JSON")
+    .action((route: string | undefined, o) => commands.evaluate(root(o), route, { all: o.all, runs: o.runs, record: o.record, report: o.report }));
   cli.command("init [dir]", "Create a new Mirage app").action((dir: string | undefined) => commands.init(dir ?? "."));
   cli.help();
   cli.version("0.1.0");

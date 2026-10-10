@@ -291,6 +291,24 @@ CLI:
 - `mirage regen <route> [--write]`: generates again, ignoring caches, and prints a diff against `page.spec.json`.
 - `mirage eject <route> [--keep-intent]`: writes a `page.tsx` that renders the same tree with plain JSX.
 - `mirage init [dir]`: scaffolds a new app.
+- `mirage eval [route] [--runs n] [--record file] [--report file]`: generates each route `n` times (default 3), ignoring caches, and reports how many specs were valid on the first try, valid after repair, or failed, with the most common validation errors and token use. `--record` saves the model responses from successful runs.
+
+### Testing against real model output
+
+`mirage eval --record` writes a recording: model responses keyed by a hash of the prompt. `replayModel(recording)` from `@mirage/server` is a model that answers from it, so tests exercise real generation (streaming, repairs, validation) without a model or API key:
+
+```ts
+import { readFileSync } from "node:fs";
+import { defineConfig, replayModel } from "@mirage/server";
+
+export default defineConfig({
+  model: replayModel(JSON.parse(readFileSync("./fixtures/app.recording.json", "utf8"))),
+});
+```
+
+The prompt includes the intent, catalog and tool signatures, so changing any of them makes the recording stale. Replay then fails with a message to re-record rather than serving an outdated answer. `recordingModel(model, onRecord)` is the wrapper `eval` uses, for custom harnesses.
+
+In this repo, `pnpm e2e` runs the Playwright suite in `e2e/` twice: against the production build with committed specs, and (once `e2e/fixtures/greenhouse.recording.json` exists) against a copy with no committed specs that generates every page from the recording. `pnpm eval` and `pnpm eval:record` run `mirage eval` on the greenhouse example; both need `ANTHROPIC_API_KEY`.
 
 ---
 
