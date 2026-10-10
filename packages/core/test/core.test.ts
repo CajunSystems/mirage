@@ -18,8 +18,8 @@ const catalog = defineCatalog({
 });
 
 const tools = {
-  listPlants: { mutation: false },
-  addPlant: { mutation: true },
+  listPlants: { mutation: false, input: z.object({ query: z.string().optional(), limit: z.number().optional() }) },
+  addPlant: { mutation: true, input: z.object({ name: z.string() }) },
 };
 
 const good: Spec = {
@@ -143,6 +143,33 @@ describe("validateSpec", () => {
     const s = clone();
     s.elements.table.props.onRowClick.to = "https://evil.example";
     expect(errorsOf(s)[0]!.message).toMatch(/same-origin/);
+  });
+});
+
+describe("validateSpec: tool args and reachability", () => {
+  it("rejects literal tool args that do not match the tool's input schema", () => {
+    const s = clone();
+    s.data.plants.args.limit = "ten";
+    expect(errorsOf(s)).toEqual([{ path: "data.plants.args.limit", message: expect.stringMatching(/number/) }]);
+  });
+
+  it("checks action args too, including missing required ones", () => {
+    const s = clone();
+    s.elements.add.props.onPress.args = {};
+    expect(errorsOf(s)).toEqual([{ path: "elements.add.props.onPress.args.name", message: expect.any(String) }]);
+  });
+
+  it("does not type-check args that are bindings or event values", () => {
+    const s = clone();
+    s.elements.add.props.onPress.args = { name: { $event: "name" } };
+    s.data.plants.args.limit = { $state: "search" };
+    expect(check(s).ok).toBe(true);
+  });
+
+  it("reports elements that are not reachable from root", () => {
+    const s = clone();
+    s.elements.orphan = { type: "Heading", props: { text: "Lost" } };
+    expect(errorsOf(s)).toEqual([{ path: "elements.orphan", message: expect.stringMatching(/not reachable from root/) }]);
   });
 });
 

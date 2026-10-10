@@ -66,6 +66,20 @@ export async function dev(root: string, options: { port?: number; host?: string 
 export async function buildApp(root: string) {
   root = resolve(root);
   const outDir = join(root, "dist");
+  // Committed specs are inlined into the client and served without the server's checks, so a
+  // hand-edited or stale page.spec.json must fail the build instead of shipping.
+  await withProject(root, async (project) => {
+    const problems: string[] = [];
+    for (const info of project.mirage.routes().filter((r) => r.specPath && r.intentPath && !r.pagePath)) {
+      if (parseIntent(readFileSync(info.intentPath!, "utf8")).frontmatter.mode === "live") continue;
+      const errors: string[] = [];
+      const result = await project.mirage.resolveSpec(info.path, {}, (e) => {
+        if (e.type === "error") errors.push(e.message, ...(e.errors ?? []).map((x) => `  ${x.path}: ${x.message}`));
+      });
+      if (!result.ok || result.source !== "locked") problems.push(...(errors.length ? errors : [`${info.path}: could not load page.spec.json`]));
+    }
+    if (problems.length) throw new Error(`invalid committed specs:\n${problems.join("\n")}`);
+  });
   await build({ root, build: { outDir: join(outDir, "client"), emptyOutDir: true } });
   await build({
     root,

@@ -1,11 +1,13 @@
 import { streamText, type LanguageModel } from "ai";
-import { stripJsonFence, validateSpec, type Catalog, type Spec, type ToolSignature, type ValidationError } from "@mirage/core";
+import { stripJsonFence, validateSpec, type Catalog, type Spec, type ToolSignature, type ValidateOptions, type ValidationError } from "@mirage/core";
 import { buildPrompt, type PromptInput } from "./prompt.js";
 
 export type GenerateOptions = {
   model: LanguageModel;
   catalog: Catalog;
   tools: ToolSignature[];
+  /** The route's tool definitions, so generated args are checked against each tool's input schema. */
+  toolDefs?: ValidateOptions["tools"];
   intent: PromptInput["intent"];
   route: PromptInput["route"];
   /** Repair attempts after the first try. Default 2. */
@@ -15,12 +17,14 @@ export type GenerateOptions = {
   abortSignal?: AbortSignal;
 };
 
-export type GenerateResult = { ok: true; spec: Spec; attempts: number } | { ok: false; errors: ValidationError[]; attempts: number };
+export type GenerateResult =
+  | { ok: true; spec: Spec; attempts: number }
+  | { ok: false; errors: ValidationError[]; attempts: number; aborted?: true };
 
 /** Streams a spec from the model, validates it, and retries with the errors (up to `maxRepairs` times). */
 export async function generateSpec(options: GenerateOptions): Promise<GenerateResult> {
   const { model, catalog, tools, intent, route, maxRepairs = 2 } = options;
-  const toolMap = Object.fromEntries(tools.map((t) => [t.name, t]));
+  const toolMap = options.toolDefs ?? Object.fromEntries(tools.map((t) => [t.name, { mutation: t.mutation }]));
   let repair: PromptInput["repair"];
   let errors: ValidationError[] = [];
 
@@ -49,7 +53,7 @@ export async function generateSpec(options: GenerateOptions): Promise<GenerateRe
     }
 
     if (options.abortSignal?.aborted) {
-      return { ok: false, errors: [{ path: "(root)", message: "generation aborted" }], attempts: attempt };
+      return { ok: false, errors: [{ path: "(root)", message: "generation aborted" }], attempts: attempt, aborted: true };
     }
     let parsed: unknown;
     try {
