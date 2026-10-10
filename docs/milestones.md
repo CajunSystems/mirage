@@ -11,7 +11,7 @@ The build order for Mirage. Each milestone has a scope and an **Accept** line, a
 | M5: Lock / unlock / regen / eject + build | Done (v1) |
 | M6: Polish | Done (v1) |
 | M7: Real-model generation | Done |
-| M8: Publishable packages | Done, apart from the first publish (needs the `cajunsystems` npm org and an `NPM_TOKEN` secret) |
+| M8: Publishable packages | Done: 0.1.0 published |
 | M9: Per-route code splitting | Next |
 | M10: Starter app from `mirage init` | Planned |
 | M11: Catalog expansion | Planned |
@@ -75,7 +75,8 @@ The v1 brief used a clinic example. The repo ships `examples/greenhouse` instead
   - [x] Changesets with all `@cajunsystems/mirage-*` packages versioned together; versions start at `0.0.0` so the first release is `0.1.0`.
   - [x] `release.yml`: on `main`, opens a "Version packages" PR; merging it publishes to npm with provenance.
   - [x] `pnpm smoke:pack` (and a `pack` CI job): packs every package, installs the tarballs into a copy of the greenhouse app outside the monorepo, then typechecks, builds and serves a locked page and a tool with no model.
-  - [ ] First publish: make sure the `cajunsystems` org exists on npmjs.com, add an automation token as the `NPM_TOKEN` repository secret, then merge the "Version packages" PR.
+  - [x] First publish: 0.1.0 of all six packages, published from a maintainer machine with 2FA (so without provenance). Trusted Publishing is linked for each package.
+  - [x] CI publishes through npm Trusted Publishing (OIDC): no npm token is stored, and provenance is automatic. `scripts/publish.mjs` packs with pnpm and publishes with `npm`.
 
 ---
 
