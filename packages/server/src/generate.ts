@@ -1,5 +1,4 @@
-import { jsonSchema, Output, streamText, type LanguageModel } from "ai";
-import { z } from "zod";
+import { streamText, type LanguageModel } from "ai";
 import { validateSpec, type Catalog, type Spec, type ToolSignature, type ValidationError } from "@mirage/core";
 import { buildPrompt, type PromptInput } from "./prompt.js";
 
@@ -21,7 +20,6 @@ export type GenerateResult = { ok: true; spec: Spec; attempts: number } | { ok: 
 /** Streams a spec from the model, validates it, and retries with the errors (up to `maxRepairs` times). */
 export async function generateSpec(options: GenerateOptions): Promise<GenerateResult> {
   const { model, catalog, tools, intent, route, maxRepairs = 2 } = options;
-  const schema = jsonSchema(z.toJSONSchema(catalog.specSchema, { unrepresentable: "any" }) as Parameters<typeof jsonSchema>[0]);
   const toolMap = Object.fromEntries(tools.map((t) => [t.name, t]));
   let repair: PromptInput["repair"];
   let errors: ValidationError[] = [];
@@ -33,7 +31,9 @@ export async function generateSpec(options: GenerateOptions): Promise<GenerateRe
       model,
       system,
       prompt,
-      output: Output.object({ schema, name: "mirage_spec" }),
+      // Plain text, no provider-side schema: constrained decoding cannot express the spec's id-keyed
+      // maps (Anthropic forces them empty). The prompt carries every component and tool schema, and
+      // validateSpec plus the repair loop enforce them.
       abortSignal: options.abortSignal,
       onError: () => {}, // surfaced through fullStream below
     });
@@ -53,7 +53,7 @@ export async function generateSpec(options: GenerateOptions): Promise<GenerateRe
     }
     let parsed: unknown;
     try {
-      parsed = JSON.parse(text);
+      parsed = JSON.parse(stripFences(text));
     } catch (error) {
       errors = [{ path: "(root)", message: `output is not valid JSON: ${(error as Error).message}` }];
       repair = { errors, previous: text };
@@ -65,4 +65,10 @@ export async function generateSpec(options: GenerateOptions): Promise<GenerateRe
     repair = { errors, previous: text };
   }
   return { ok: false, errors, attempts: maxRepairs + 1 };
+}
+
+/** Some models wrap JSON in a Markdown fence despite instructions. */
+function stripFences(text: string): string {
+  const match = /^\s*```(?:json)?\s*\n([\s\S]*?)\n\s*```\s*$/.exec(text);
+  return match ? match[1]! : text;
 }

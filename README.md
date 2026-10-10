@@ -256,7 +256,7 @@ export const waterPlant = defineTool({
 
 - `POST /__mirage/generate` with `{ route, params }` returns an NDJSON stream of `delta`, `retry`, `spec`, and `error` events.
 - `buildPrompt(input) => { system, prompt }` is a pure function covering the rules, the catalog (the intent's subset, if one is set), the visible tool signatures, the intent, the route, and, on retries, the validation errors from the previous attempt.
-- Generation uses AI SDK `streamText` with `Output.object` and the catalog's JSON Schema. The result is validated against the schema and then semantically: the root exists, children exist, there are no cycles, and all tools, `$data` names, `$state` roots, and `$param` names exist. On failure Mirage retries up to twice with the errors, then reports them.
+- Generation uses AI SDK `streamText` with plain text output. The prompt lists every component's and tool's JSON Schema; no schema is sent as a provider-side constraint (see `docs/decisions.md`). The result is validated against the schema and then semantically: the root exists, children exist, there are no cycles, and all tools, `$data` names, `$state` roots, and `$param` names exist. On failure Mirage retries up to twice with the errors, then reports them.
 
 ```ts
 // mirage.config.ts
@@ -308,7 +308,7 @@ export default defineConfig({
 
 The prompt includes the intent, catalog and tool signatures, so changing any of them makes the recording stale. Replay then fails with a message to re-record rather than serving an outdated answer. `recordingModel(model, onRecord)` is the wrapper `eval` uses, for custom harnesses.
 
-In this repo, `pnpm e2e` runs the Playwright suite in `e2e/` twice: against the production build with committed specs, and (once `e2e/fixtures/greenhouse.recording.json` exists) against a copy with no committed specs that generates every page from the recording. `pnpm eval` and `pnpm eval:record` run `mirage eval` on the greenhouse example; both need `ANTHROPIC_API_KEY`.
+In this repo, `pnpm e2e` runs the Playwright suite in `e2e/` twice: against the production build with committed specs, and (once `e2e/fixtures/greenhouse.recording.json` exists) against a copy with no committed specs that generates every page from the recording. `pnpm eval` and `pnpm eval:record` run `mirage eval` on the greenhouse example; both need `ANTHROPIC_API_KEY`, which the example's config reads from the environment or from a gitignored `examples/greenhouse/.env`.
 
 ---
 

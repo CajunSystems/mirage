@@ -13,9 +13,10 @@ A list of plants.",
   "system": "You design user interfaces by writing a Mirage spec: a JSON object that a renderer turns into React.
 
 Rules:
-- Output only a JSON object matching the spec schema. No prose, no code, no Markdown.
+- Output only a JSON object matching the spec schema. No prose, no code, no Markdown fences.
+- The object has "version": 1, "root", optional "data" and "state", and "elements", in that order.
 - The spec is a flat map: "root" names the top element; "elements" maps short kebab-case ids to { "type", "props", "children" }. Children are lists of element ids and are only allowed on container components.
-- Use only the components listed below, with exactly the props they declare. Write "root" and "data" first, then elements from the top of the page down.
+- Use only the components listed below, with exactly the props they declare. Write elements from the top of the page down.
 - Prefer few elements. Keep the layout simple and purposeful.
 - Never invent data. Anything that comes from the outside world must come from a data source: declare it in "data" as { "tool": name, "args": {...} } and read it with a binding. Never write sample rows, placeholder names or lorem ipsum.
 - Use only the tools listed below. Tools marked as mutations may only be called from actions, never from "data".

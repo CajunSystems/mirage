@@ -10,8 +10,8 @@ The build order for Mirage. Each milestone has a scope and an **Accept** line, a
 | M4: Vite plugin + routing + dev | Done (v1) |
 | M5: Lock / unlock / regen / eject + build | Done (v1) |
 | M6: Polish | Done (v1) |
-| M7: Real-model generation | In progress: tooling done, real-model run pending an API key |
-| M8: Publishable packages | Planned |
+| M7: Real-model generation | Done |
+| M8: Publishable packages | Next |
 | M9: Per-route code splitting | Planned |
 | M10: Starter app from `mirage init` | Planned |
 | M11: Catalog expansion | Planned |
@@ -34,7 +34,7 @@ The v1 brief used a clinic example. The repo ships `examples/greenhouse` instead
 **M3: Server + generation**
 - Hono app with `/tools/:name` and `/generate`, prompt builder, generation with a repair loop, cache.
 - Accept: prompt builder snapshot tests; with a mocked model, invalid output triggers up to 2 repairs; a cache hit returns without calling the model.
-- Note: uses `streamText` + `Output.object` rather than the deprecated `streamObject` (see `decisions.md`).
+- Note: used `streamText` + `Output.object` rather than the deprecated `streamObject`. M7 replaced the provider-side schema with plain text output (see `decisions.md`).
 
 **M4: Vite plugin + routing + dev**
 - Route scan, virtual module, dev middleware, HMR on intent change.
@@ -50,7 +50,7 @@ The v1 brief used a clinic example. The repo ships `examples/greenhouse` instead
 
 ---
 
-## Next
+## Done since v1
 
 **M7: Real-model generation**
 - Run generation against a real provider for every greenhouse route and fix what breaks: prompt wording, catalog and tool descriptions, repair-message clarity.
@@ -62,8 +62,13 @@ The v1 brief used a clinic example. The repo ships `examples/greenhouse` instead
   - [x] `recordingModel` / `replayModel` in `@mirage/server`, keyed by prompt hash, with record/replay tests.
   - [x] `mirage eval [route] --runs n --record file --report file`, plus `pnpm eval` / `pnpm eval:record` for the greenhouse.
   - [x] Playwright suite in `e2e/`: the `locked` run (production build, committed specs) passes and runs in CI. The `replay` run turns on when the recording exists; checked locally against a throwaway recording that was not committed.
-  - [ ] Record `e2e/fixtures/greenhouse.recording.json` from a real model (`pnpm eval:record`).
-  - [ ] Run `pnpm eval` (several runs per route), tune the prompt and catalog descriptions, and record the results in `decisions.md`.
+  - [x] Record `e2e/fixtures/greenhouse.recording.json` from a real model (`pnpm eval:record`, Anthropic `claude-sonnet-5-5`). Both E2E runs pass (12/12).
+  - [x] Run `pnpm eval`: 9/9 valid on the first try after two fixes (no provider-side schema; the prompt states `"version": 1`). Results in `decisions.md`.
+- Not covered: a second provider. The accept line asks for "at least one major provider", which is met; adding another to `pnpm eval` is cheap once a key exists.
+
+---
+
+## Next
 
 **M8: Publishable packages**
 - Final package names and scope, `exports`/`files`/`types` fields, peer dependencies (`react`, `react-router`, `ai`, `zod`, `vite`), a changeset-based release flow, and a publish job in CI.

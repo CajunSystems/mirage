@@ -16,7 +16,7 @@ Choices made while building v1, including answers to the open questions in the R
 - **Bindings in any prop.** In a spec, every non-action prop accepts either its declared type or a binding (`$data` / `$state` / `$param`). So a heading can show `{ "$data": "plant", "path": "name" }`. Props declared `z.ref()` must be bindings, and the component receives a `DataResult` (`{ data, loading, error }`) for them. Other props receive the plain resolved value. The element renders as a skeleton while a `$data` value it reads is still loading.
 - **`$data` bindings take an optional `path`** (`{ "$data": "plant", "path": "name" }`) so one data source can feed several elements.
 - **Defaults are applied at render time, not during validation.** A validated spec is exactly what the model wrote. `mirage eject` writes the schema defaults into the emitted JSX, so the ejected page renders the same DOM as the spec renderer.
-- **`streamText` + `Output.object` instead of `streamObject`.** `streamObject` is deprecated in AI SDK 7. The provider still gets the catalog-derived JSON Schema as a structured-output constraint. Mirage runs its own validation (zod plus the semantic checks) so it controls the repair loop.
+- **`streamText` with plain text output, no provider-side schema.** `streamObject` is deprecated in AI SDK 7. v1 passed the catalog-derived JSON Schema through `Output.object`, but constrained decoding cannot express the spec's id-keyed maps: on Anthropic, `elements` and `data` came back as `{}` on every attempt, so no page could ever generate (found in M7). The prompt already lists every component's props and every tool's input and output as JSON Schema, and Mirage runs its own validation (zod plus the semantic checks) and repair loop. Changing the spec to arrays would make it constrainable but also harder to stream and diff, so the format stays as is.
 - **The generate endpoint streams NDJSON events**, not the AI SDK object stream: `delta` (raw text), `retry` (the partial spec restarts after a failed validation), `spec` (final, validated), and `error`. A repair attempt needs a reset signal, and cached or locked responses skip the model entirely. The AI SDK stream format has no event for either case. The client parses partial JSON with its own small parser, which exposes only completed values, and drops the trailing element that may still be incomplete. This keeps the AI SDK out of the browser bundle.
 - **Generation stops when the client disconnects.** A truncated response would otherwise look like invalid JSON and use up repair attempts.
 - **Extra frontmatter keys:** `specPerParams` (default `false`) makes param values part of the cache key, so each value gets its own spec. `ttl` (seconds, default 60) sets the in-memory reuse window for `live` pages. `maxSpecs` (default 100) caps how many specs one server process will generate for a route. This bounds model cost when client-supplied params feed the cache key.
@@ -36,7 +36,15 @@ Choices made while building v1, including answers to the open questions in the R
 - **`mirage eval --record` keeps only successful runs.** Replaying a recording therefore never reproduces a failed generation. When a route is run several times, the last successful run's responses win.
 - **The replay E2E run uses a copy of the example** (`examples/greenhouse/.e2e/replay`, gitignored) with the committed specs removed, rather than a flag that makes Mirage ignore committed specs. No framework code exists only for tests. The copy sits inside the example so its imports resolve from the example's `node_modules`.
 - **E2E assertions follow the intents, not the layout.** The same suite runs against committed and generated specs, which may differ in structure.
-- Results against real providers: _pending (needs an API key; see `docs/milestones.md`, M7)._
+- **Results, Anthropic `claude-sonnet-5-5`, 2026-10-10** (`pnpm eval`, 3 runs per route):
+
+  | Route | Runs | Valid first try | Repaired | Failed | Avg output tokens | Avg time |
+  |---|---|---|---|---|---|---|
+  | `/` | 3 | 3 | 0 | 0 | 609 | 3.8s |
+  | `/plants` | 3 | 3 | 0 | 0 | 1549 | 9.2s |
+  | `/plants/:id` | 3 | 3 | 0 | 0 | 829 | 4.8s |
+
+  The first real run failed every attempt, because of the structured-output problem above. After that was fixed, the only error was a missing `"version": 1`, which the prompt never asked for; the prompt now states the top-level shape. The recorded responses (`e2e/fixtures/greenhouse.recording.json`) pass the full E2E suite, so the generated pages do what the intents ask, not just validate. Three runs per route on one provider is a small sample: rerun `pnpm eval` with more runs after prompt or catalog changes.
 
 ## Production
 
