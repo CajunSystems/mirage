@@ -343,7 +343,7 @@ pnpm smoke:pack   # pack, install outside the monorepo, build and serve
 pnpm changeset    # describe a change for the next release
 ```
 
-Releases: changes to published packages need a changeset (`pnpm changeset`). On `main`, the release workflow keeps a "Version packages" PR up to date; merging it publishes every `@cajunsystems/mirage-*` package to npm with provenance.
+Releases: changes to published packages need a changeset (`pnpm changeset`). On `main`, the release workflow keeps a "Version packages" PR up to date; merging it publishes every `@cajunsystems/mirage-*` package whose version is not on npm yet, through npm Trusted Publishing (no token; provenance is added automatically). `scripts/publish.mjs --dry-run` shows what would be published.
 
 ---
 

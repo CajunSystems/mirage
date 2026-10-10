@@ -12,7 +12,7 @@
     "eval": "node packages/cli/dist/bin.js eval --root examples/greenhouse",
     "eval:record": "node packages/cli/dist/bin.js eval --root examples/greenhouse --runs 1 --record e2e/fixtures/greenhouse.recording.json",
     "changeset": "changeset",
-    "release": "pnpm build && changeset publish",
+    "release": "pnpm build && node scripts/publish.mjs",
     "smoke:pack": "node scripts/pack-smoke.mjs"
   },
   "devDependencies": {
