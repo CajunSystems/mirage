@@ -1,5 +1,5 @@
-import { defineCatalog, z } from "@mirage/core";
-import { basicCatalog } from "@mirage/catalog-basic";
+import { defineCatalog, z } from "@cajunsystems/mirage-core";
+import { basicCatalog } from "@cajunsystems/mirage-catalog-basic";
 import { MoistureMeter } from "./components/MoistureMeter";
 
 export const catalog = defineCatalog({

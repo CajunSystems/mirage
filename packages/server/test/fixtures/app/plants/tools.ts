@@ -1,4 +1,4 @@
-import { defineTool, z } from "@mirage/core";
+import { defineTool, z } from "@cajunsystems/mirage-core";
 
 const plant = z.object({ id: z.string(), name: z.string() });
 

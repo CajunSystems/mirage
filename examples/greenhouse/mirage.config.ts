@@ -1,6 +1,6 @@
 import { anthropic } from "@ai-sdk/anthropic";
 import { existsSync } from "node:fs";
-import { defineConfig } from "@mirage/server";
+import { defineConfig } from "@cajunsystems/mirage-server";
 
 // Local secrets (gitignored). Variables already set in the environment win.
 const envFile = new URL("./.env", import.meta.url);

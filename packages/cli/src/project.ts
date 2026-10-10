@@ -1,9 +1,9 @@
 import { resolve } from "node:path";
 import { createServer, type Plugin, type ViteDevServer } from "vite";
-import { mirage, type MiragePluginApi } from "@mirage/vite";
-import type { MirageServer } from "@mirage/server";
-import type { Catalog } from "@mirage/core";
-import type { ProjectPaths } from "@mirage/vite";
+import { mirage, type MiragePluginApi } from "@cajunsystems/mirage-vite";
+import type { MirageServer } from "@cajunsystems/mirage-server";
+import type { Catalog } from "@cajunsystems/mirage-core";
+import type { ProjectPaths } from "@cajunsystems/mirage-vite";
 
 export type Project = {
   vite: ViteDevServer;
@@ -26,6 +26,9 @@ export async function openProject(root: string): Promise<Project> {
     logLevel: "error",
     server: { middlewareMode: true, hmr: false, watch: null },
     appType: "custom",
+    // Only server-side modules are loaded here. Without this, Vite starts scanning browser deps
+    // and logs errors when the short-lived server closes mid-scan.
+    optimizeDeps: { noDiscovery: true, include: [] },
   });
   const { mirage: server, paths } = await miragePlugin(vite).api.server(vite);
   const catalog = (await vite.ssrLoadModule(paths.catalogFile))[paths.catalogExport] as Catalog;

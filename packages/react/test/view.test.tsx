@@ -1,9 +1,9 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { defineCatalog, z, type PartialSpec, type Spec } from "@mirage/core";
-import { basicCatalog } from "@mirage/catalog-basic";
-import { MirageView, settle } from "@mirage/react";
+import { defineCatalog, z, type PartialSpec, type Spec } from "@cajunsystems/mirage-core";
+import { basicCatalog } from "@cajunsystems/mirage-catalog-basic";
+import { MirageView, settle } from "@cajunsystems/mirage-react";
 
 afterEach(cleanup);
 

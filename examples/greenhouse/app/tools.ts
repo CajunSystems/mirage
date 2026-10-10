@@ -1,5 +1,5 @@
 // Tools visible to every route.
-import { defineTool, z } from "@mirage/core";
+import { defineTool, z } from "@cajunsystems/mirage-core";
 import { daysSince, db, needsWater, type Plant } from "../server/db";
 
 const row = (p: Plant) => ({

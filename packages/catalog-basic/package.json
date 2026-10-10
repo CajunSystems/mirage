@@ -1,15 +1,58 @@
 {
-  "name": "@mirage/catalog-basic",
-  "version": "0.1.0",
-  "type": "module",
+  "name": "@cajunsystems/mirage-catalog-basic",
+  "version": "0.0.0",
+  "description": "Default component catalog for Mirage, styled with plain CSS variables.",
+  "keywords": [
+    "mirage",
+    "generative-ui",
+    "react",
+    "llm",
+    "ai"
+  ],
   "license": "Apache-2.0",
+  "author": "CajunSystems",
+  "homepage": "https://github.com/CajunSystems/mirage/tree/main/packages/catalog-basic#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/CajunSystems/mirage.git",
+    "directory": "packages/catalog-basic"
+  },
+  "bugs": {
+    "url": "https://github.com/CajunSystems/mirage/issues"
+  },
+  "type": "module",
+  "sideEffects": [
+    "**/*.css"
+  ],
   "exports": {
-    ".": { "types": "./dist/index.d.ts", "import": "./dist/index.js" },
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
     "./styles.css": "./dist/styles.css"
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
-  "files": ["dist"],
-  "dependencies": { "@mirage/core": "workspace:*" },
-  "peerDependencies": { "react": "^19.0.0" }
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "dependencies": {
+    "@cajunsystems/mirage-core": "workspace:*"
+  },
+  "peerDependencies": {
+    "react": "^19.0.0",
+    "zod": "^4.1.0"
+  },
+  "devDependencies": {
+    "react": "^19.1.0",
+    "zod": "^4.1.0"
+  }
 }

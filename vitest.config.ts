@@ -6,11 +6,11 @@ const pkg = (name: string) => fileURLToPath(new URL(`./packages/${name}/src/inde
 export default defineConfig({
   resolve: {
     alias: {
-      "@mirage/core": pkg("core"),
-      "@mirage/react": pkg("react"),
-      "@mirage/server": pkg("server"),
-      "@mirage/vite": pkg("vite"),
-      "@mirage/catalog-basic": pkg("catalog-basic"),
+      "@cajunsystems/mirage-core": pkg("core"),
+      "@cajunsystems/mirage-react": pkg("react"),
+      "@cajunsystems/mirage-server": pkg("server"),
+      "@cajunsystems/mirage-vite": pkg("vite"),
+      "@cajunsystems/mirage-catalog-basic": pkg("catalog-basic"),
     },
   },
   test: {

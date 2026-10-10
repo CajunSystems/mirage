@@ -10,7 +10,7 @@ import {
   type DataResult,
   type DataSource,
   type Effect,
-} from "@mirage/core";
+} from "@cajunsystems/mirage-core";
 
 export type CallTool = (name: string, args: Record<string, unknown>) => Promise<unknown>;
 

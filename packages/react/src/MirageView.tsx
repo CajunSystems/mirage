@@ -9,7 +9,7 @@ import {
   type ComponentType,
   type ReactNode,
 } from "react";
-import { isAction, kindOf, type Action, type Catalog, type PartialSpec, type Spec } from "@mirage/core";
+import { isAction, kindOf, type Action, type Catalog, type PartialSpec, type Spec } from "@cajunsystems/mirage-core";
 import { MirageRuntime, type CallTool } from "./runtime.js";
 
 declare const process: { env: { NODE_ENV?: string } };

@@ -1,13 +1,51 @@
 {
-  "name": "@mirage/core",
-  "version": "0.1.0",
-  "type": "module",
+  "name": "@cajunsystems/mirage-core",
+  "version": "0.0.0",
+  "description": "Mirage core: catalogs, tools, the spec format and its validator.",
+  "keywords": [
+    "mirage",
+    "generative-ui",
+    "react",
+    "llm",
+    "ai"
+  ],
   "license": "Apache-2.0",
+  "author": "CajunSystems",
+  "homepage": "https://github.com/CajunSystems/mirage/tree/main/packages/core#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/CajunSystems/mirage.git",
+    "directory": "packages/core"
+  },
+  "bugs": {
+    "url": "https://github.com/CajunSystems/mirage/issues"
+  },
+  "type": "module",
+  "sideEffects": false,
   "exports": {
-    ".": { "types": "./dist/index.d.ts", "import": "./dist/index.js" }
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
-  "files": ["dist"],
-  "dependencies": { "zod": "^4.1.0" }
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "dependencies": {},
+  "peerDependencies": {
+    "zod": "^4.1.0"
+  },
+  "devDependencies": {
+    "zod": "^4.1.0"
+  }
 }

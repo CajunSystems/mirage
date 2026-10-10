@@ -1,4 +1,4 @@
-import type { ComponentDescription, ToolSignature, ValidationError } from "@mirage/core";
+import type { ComponentDescription, ToolSignature, ValidationError } from "@cajunsystems/mirage-core";
 import type { IntentFrontmatter } from "./intent.js";
 
 export type PromptInput = {

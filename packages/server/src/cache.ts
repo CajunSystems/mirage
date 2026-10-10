@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
-import { SPEC_VERSION, type Catalog, type Spec, type ToolSignature } from "@mirage/core";
+import { SPEC_VERSION, type Catalog, type Spec, type ToolSignature } from "@cajunsystems/mirage-core";
 import { z } from "zod";
 
 /** Bump when generation changes in a way that should invalidate every cached spec. */

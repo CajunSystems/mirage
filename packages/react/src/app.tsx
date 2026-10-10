@@ -1,6 +1,6 @@
 import { useMemo, type ComponentType } from "react";
 import { createBrowserRouter, Outlet, RouterProvider, useNavigate, useParams, type RouteObject } from "react-router";
-import type { Catalog, Spec, ValidationError } from "@mirage/core";
+import type { Catalog, Spec, ValidationError } from "@cajunsystems/mirage-core";
 import { MirageView } from "./MirageView.js";
 import { httpCallTool } from "./runtime.js";
 import { useGeneratedSpec } from "./stream.js";

@@ -122,8 +122,8 @@ The catalog is the **only vocabulary** the model has. Each entry pairs a React c
 
 ```ts
 // catalog.ts
-import { defineCatalog, z } from "@mirage/core";   // zod v4 + z.ref() / z.action()
-import { basicCatalog } from "@mirage/catalog-basic";
+import { defineCatalog, z } from "@cajunsystems/mirage-core";   // zod v4 + z.ref() / z.action()
+import { basicCatalog } from "@cajunsystems/mirage-catalog-basic";
 import { MoistureMeter } from "./components/MoistureMeter";
 
 export const catalog = defineCatalog({
@@ -152,7 +152,7 @@ Table: {
 
 - `defineCatalog` returns `entries`, `describe()` (a JSON Schema and description for each component, used in the prompt), `specSchema`, and `subset(names)`.
 - `children: true` marks container components. Non-container components are rejected if they receive children.
-- `@mirage/catalog-basic` ships `Stack`, `Row`, `Grid`, `Heading`, `Text`, `Card`, `Table`, `Button`, `Form`, `TextInput`, `Select`, `Badge`, `Stat`, `Tabs`, and `Dialog`. They use plain CSS with `--mi-*` variables (import `@mirage/catalog-basic/styles.css`).
+- `@cajunsystems/mirage-catalog-basic` ships `Stack`, `Row`, `Grid`, `Heading`, `Text`, `Card`, `Table`, `Button`, `Form`, `TextInput`, `Select`, `Badge`, `Stat`, `Tabs`, and `Dialog`. They use plain CSS with `--mi-*` variables (import `@cajunsystems/mirage-catalog-basic/styles.css`).
 
 ---
 
@@ -221,7 +221,7 @@ Tools are the only way a spec can touch the outside world, like server actions i
 
 ```ts
 // app/plants/[id]/tools.ts
-import { defineTool, z } from "@mirage/core";
+import { defineTool, z } from "@cajunsystems/mirage-core";
 
 export const waterPlant = defineTool({
   description: "Record that a plant was watered today.",
@@ -238,7 +238,7 @@ export const waterPlant = defineTool({
 
 ---
 
-## 8. Renderer (`@mirage/react`)
+## 8. Renderer (`@cajunsystems/mirage-react`)
 
 ```tsx
 <MirageView spec={spec} catalog={catalog} params={params} callTool={...} navigate={...} />
@@ -252,7 +252,7 @@ export const waterPlant = defineTool({
 
 ---
 
-## 9. Generation (`@mirage/server`)
+## 9. Generation (`@cajunsystems/mirage-server`)
 
 - `POST /__mirage/generate` with `{ route, params }` returns an NDJSON stream of `delta`, `retry`, `spec`, and `error` events.
 - `buildPrompt(input) => { system, prompt }` is a pure function covering the rules, the catalog (the intent's subset, if one is set), the visible tool signatures, the intent, the route, and, on retries, the validation errors from the previous attempt.
@@ -261,7 +261,7 @@ export const waterPlant = defineTool({
 ```ts
 // mirage.config.ts
 import { anthropic } from "@ai-sdk/anthropic";
-import { defineConfig } from "@mirage/server";
+import { defineConfig } from "@cajunsystems/mirage-server";
 
 export default defineConfig({
   model: anthropic("claude-sonnet-5-5"),   // any AI SDK LanguageModel; optional for fully locked apps
@@ -295,11 +295,11 @@ CLI:
 
 ### Testing against real model output
 
-`mirage eval --record` writes a recording: model responses keyed by a hash of the prompt. `replayModel(recording)` from `@mirage/server` is a model that answers from it, so tests exercise real generation (streaming, repairs, validation) without a model or API key:
+`mirage eval --record` writes a recording: model responses keyed by a hash of the prompt. `replayModel(recording)` from `@cajunsystems/mirage-server` is a model that answers from it, so tests exercise real generation (streaming, repairs, validation) without a model or API key:
 
 ```ts
 import { readFileSync } from "node:fs";
-import { defineConfig, replayModel } from "@mirage/server";
+import { defineConfig, replayModel } from "@cajunsystems/mirage-server";
 
 export default defineConfig({
   model: replayModel(JSON.parse(readFileSync("./fixtures/app.recording.json", "utf8"))),
@@ -329,7 +329,7 @@ docs/
   milestones.md
 ```
 
-Package names are placeholders (`@mirage/*`). The unscoped name `mirage` is taken on npm by Mirage JS, so pick the final scope before publishing.
+Packages are published as `@cajunsystems/mirage-*` (the unscoped name `mirage` is taken on npm by Mirage JS, and the `mirage` npm org is not available). The CLI binary is `mirage`.
 
 Development:
 
@@ -338,7 +338,12 @@ pnpm install
 pnpm build        # tsc -b across packages
 pnpm test         # vitest: core, renderer, server (mock model), vite codegen, eject
 pnpm typecheck    # packages + the example app
+pnpm e2e          # Playwright: committed specs, and pages generated from a recording
+pnpm smoke:pack   # pack, install outside the monorepo, build and serve
+pnpm changeset    # describe a change for the next release
 ```
+
+Releases: changes to published packages need a changeset (`pnpm changeset`). On `main`, the release workflow keeps a "Version packages" PR up to date; merging it publishes every `@cajunsystems/mirage-*` package to npm with provenance.
 
 ---
 

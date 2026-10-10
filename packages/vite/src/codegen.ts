@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { relative } from "node:path";
-import { parseIntent, type RouteInfo } from "@mirage/server";
+import { parseIntent, type RouteInfo } from "@cajunsystems/mirage-server";
 import type { ProjectPaths } from "./project.js";
 
 const q = (s: string) => JSON.stringify(s);
@@ -54,7 +54,7 @@ export function serverModule(routes: RouteInfo[], paths: ProjectPaths): string {
   for (const r of routes) {
     for (const f of [r.intentPath, r.specPath]) if (f) files[f] = readFileSync(f, "utf8");
   }
-  return `import { createMirageServer } from "@mirage/server";
+  return `import { createMirageServer } from "@cajunsystems/mirage-server";
 ${paths.configFile ? `import config from ${q(paths.configFile)};` : "const config = {};"}
 import * as catalogModule from ${q(paths.catalogFile)};
 ${imports.join("\n")}

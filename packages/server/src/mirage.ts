@@ -12,7 +12,7 @@ import {
   type Spec,
   type Tool,
   type ToolSignature,
-} from "@mirage/core";
+} from "@cajunsystems/mirage-core";
 import { cacheKey, catalogHash, MemoryCache, SpecCache, toolsHash } from "./cache.js";
 import type { MirageConfig } from "./config.js";
 import { generateSpec, type GenerateResult } from "./generate.js";

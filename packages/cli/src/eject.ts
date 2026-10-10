@@ -1,4 +1,4 @@
-import { kindOf, type Catalog, type Spec } from "@mirage/core";
+import { kindOf, type Catalog, type Spec } from "@cajunsystems/mirage-core";
 
 const hasBinding = (v: unknown): boolean =>
   Array.isArray(v)
@@ -59,7 +59,7 @@ export function ejectSpec(spec: Spec, options: EjectOptions): string {
   const body = render(spec.root, 2);
   const components = [...used].sort().map((name) => `const ${name} = ${catalogName}.entries.${name}.component;`);
   return `// Ejected from page.intent.md by \`mirage eject\`. This file is yours now: edit it like any React page.
-import { useMirage } from "@mirage/react";
+import { useMirage } from "@cajunsystems/mirage-react";
 import { ${catalogName} } from ${json(options.catalogImport)};
 
 ${components.join("\n")}
