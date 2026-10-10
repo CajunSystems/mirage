@@ -12,7 +12,7 @@ pnpm dev                     # http://localhost:5173
 
 The example is a greenhouse plant tracker. It has a daily watering overview, a searchable plant list with a "New plant" form, and a care page for each plant. Every page has a committed `page.spec.json`, so it runs without an API key. Set `ANTHROPIC_API_KEY` and delete a spec (`mirage unlock /plants`) to watch that page generate and stream in.
 
-Design decisions and deviations from the original brief are recorded in [`docs/decisions.md`](docs/decisions.md).
+Design decisions and deviations from the original brief are recorded in [`docs/decisions.md`](docs/decisions.md). The build order, what shipped in v1, and what comes next are in [`docs/milestones.md`](docs/milestones.md).
 
 ---
 
@@ -308,6 +308,7 @@ examples/
   greenhouse/      plant tracker: overview, list + new-plant form, per-plant care page
 docs/
   decisions.md
+  milestones.md
 ```
 
 Package names are placeholders (`@mirage/*`). The unscoped name `mirage` is taken on npm by Mirage JS, so pick the final scope before publishing.
