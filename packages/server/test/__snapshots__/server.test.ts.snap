@@ -1,0 +1,54 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`buildPrompt > assembles a stable prompt 1`] = `
+{
+  "prompt": "## Route
+path: /plants
+params: (none)
+
+## Intent
+title: Plants
+
+A list of plants.",
+  "system": "You design user interfaces by writing a Mirage spec: a JSON object that a renderer turns into React.
+
+Rules:
+- Output only a JSON object matching the spec schema. No prose, no code, no Markdown.
+- The spec is a flat map: "root" names the top element; "elements" maps short kebab-case ids to { "type", "props", "children" }. Children are lists of element ids and are only allowed on container components.
+- Use only the components listed below, with exactly the props they declare. Write "root" and "data" first, then elements from the top of the page down.
+- Prefer few elements. Keep the layout simple and purposeful.
+- Never invent data. Anything that comes from the outside world must come from a data source: declare it in "data" as { "tool": name, "args": {...} } and read it with a binding. Never write sample rows, placeholder names or lorem ipsum.
+- Use only the tools listed below. Tools marked as mutations may only be called from actions, never from "data".
+- Bindings: { "$data": source, "path"?: "field.sub" } reads a data source, { "$state": "a.b" } reads local state, { "$param": name } reads a route param. Any prop value may be a binding; props marked "x-mirage": "binding" must be one.
+- Declare initial local state in "state" (search text, form drafts, dialog open flags). State changes re-run data sources whose args depend on it.
+- Props marked "x-mirage": "action" take an action object:
+  { "$action": "tool", "name": tool, "args": {...}, "then"?: [ { "refresh": [source, ...] } | { "navigate": "/path" } | { "setState": { "path": "a.b", "value": ... } } ] }
+  { "$action": "navigate", "to": "/path/:id" }  (same-origin paths only; ":name" is filled from the event, then route params)
+  { "$action": "setState", "path": "a.b", "value": ... }
+  Inside actions, { "$event": "" } is the value the component passes (for example a row object or input text) and { "$event": "id" } a field of it. Args may also use $state and $param bindings.
+
+## Components
+- Stack (container): Vertical stack of children. The usual page root.
+  props: {"type":"object","properties":{"gap":{"default":"md","type":"string","enum":["sm","md","lg"]}}}
+- Heading: A heading. level 1 for the page title.
+  props: {"type":"object","properties":{"text":{"type":["string","number","null"]},"level":{"default":1,"anyOf":[{"type":"number","const":1},{"type":"number","const":2},{"type":"number","const":3}]}},"required":["text"]}
+- Table: Tabular data. \`rows\` must be a binding to an array. onRowClick receives the row object as $event.
+  props: {"type":"object","properties":{"rows":{"x-mirage":"binding"},"columns":{"type":"array","items":{"type":"object","properties":{"key":{"type":"string"},"label":{"type":"string"}},"required":["key","label"]}},"onRowClick":{"x-mirage":"action"},"emptyText":{"default":"Nothing here yet.","type":"string"}},"required":["rows","columns"]}
+- Button: A clickable button that triggers an action.
+  props: {"type":"object","properties":{"label":{"type":"string"},"variant":{"default":"secondary","type":"string","enum":["primary","secondary"]},"onPress":{"x-mirage":"action"}},"required":["label","onPress"]}
+
+## Tools
+- ping: Route-level tool, shadows the global one.
+  input: {"type":"object","properties":{},"additionalProperties":false}
+  output: {"type":"string"}
+- whoami: Returns the user from context.
+  input: {"type":"object","properties":{},"additionalProperties":false}
+  output: {"type":"string"}
+- listPlants: List plants, optionally filtered by name.
+  input: {"type":"object","properties":{"query":{"type":"string"}},"additionalProperties":false}
+  output: {"type":"array","items":{"type":"object","properties":{"id":{"type":"string"},"name":{"type":"string"}},"required":["id","name"],"additionalProperties":false}}
+- broken: Returns output that does not match its schema.
+  input: {"type":"object","properties":{},"additionalProperties":false}
+  output: {"type":"number"}",
+}
+`;

@@ -1,0 +1,53 @@
+{
+  "version": 1,
+  "root": "page",
+  "data": {
+    "plant": { "tool": "getPlant", "args": { "id": { "$param": "id" } } }
+  },
+  "elements": {
+    "page": { "type": "Stack", "props": { "gap": "lg" }, "children": ["back", "header", "care", "about"] },
+    "back": {
+      "type": "Button",
+      "props": { "label": "← All plants", "onPress": { "$action": "navigate", "to": "/plants" } }
+    },
+    "header": { "type": "Row", "props": { "align": "between" }, "children": ["identity", "water"] },
+    "identity": { "type": "Stack", "props": { "gap": "sm" }, "children": ["name", "species", "status"] },
+    "name": { "type": "Heading", "props": { "text": { "$data": "plant", "path": "name" }, "level": 1 } },
+    "species": { "type": "Text", "props": { "text": { "$data": "plant", "path": "species" }, "tone": "muted" } },
+    "status": {
+      "type": "Badge",
+      "props": { "text": { "$data": "plant", "path": "status" }, "tone": { "$data": "plant", "path": "statusTone" } }
+    },
+    "water": {
+      "type": "Button",
+      "props": {
+        "label": "Mark as watered",
+        "variant": "primary",
+        "onPress": {
+          "$action": "tool",
+          "name": "waterPlant",
+          "args": { "id": { "$param": "id" } },
+          "then": [{ "refresh": ["plant"] }]
+        }
+      }
+    },
+    "care": { "type": "Grid", "props": { "columns": 3 }, "children": ["moisture-card", "schedule", "since"] },
+    "moisture-card": { "type": "Card", "props": { "title": "Soil" }, "children": ["moisture"] },
+    "moisture": { "type": "MoistureMeter", "props": { "value": { "$data": "plant", "path": "moisture" } } },
+    "schedule": {
+      "type": "Stat",
+      "props": { "label": "Water every", "value": { "$data": "plant", "path": "waterEveryDays" }, "hint": "days" }
+    },
+    "since": {
+      "type": "Stat",
+      "props": {
+        "label": "Days since watered",
+        "value": { "$data": "plant", "path": "daysSinceWatered" },
+        "hint": { "$data": "plant", "path": "lastWatered" }
+      }
+    },
+    "about": { "type": "Card", "props": { "title": "About" }, "children": ["location", "notes"] },
+    "location": { "type": "Text", "props": { "text": { "$data": "plant", "path": "location" } } },
+    "notes": { "type": "Text", "props": { "text": { "$data": "plant", "path": "notes" }, "tone": "muted" } }
+  }
+}

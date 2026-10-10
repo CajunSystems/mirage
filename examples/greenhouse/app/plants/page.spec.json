@@ -1,0 +1,112 @@
+{
+  "version": 1,
+  "root": "page",
+  "data": {
+    "plants": { "tool": "listPlants", "args": { "query": { "$state": "search" } } }
+  },
+  "state": {
+    "search": "",
+    "newOpen": false,
+    "draft": { "name": "", "species": "", "location": "", "waterEveryDays": "7" }
+  },
+  "elements": {
+    "page": { "type": "Stack", "props": { "gap": "md" }, "children": ["header", "search", "table", "new-dialog"] },
+    "header": { "type": "Row", "props": { "align": "between" }, "children": ["title", "new-button"] },
+    "title": { "type": "Heading", "props": { "text": "Plants", "level": 1 } },
+    "new-button": {
+      "type": "Button",
+      "props": {
+        "label": "New plant",
+        "variant": "primary",
+        "onPress": { "$action": "setState", "path": "newOpen", "value": true }
+      }
+    },
+    "search": {
+      "type": "TextInput",
+      "props": {
+        "label": "Search",
+        "placeholder": "Name, species or location",
+        "value": { "$state": "search" },
+        "onChange": { "$action": "setState", "path": "search", "value": { "$event": "" } }
+      }
+    },
+    "table": {
+      "type": "Table",
+      "props": {
+        "rows": { "$data": "plants" },
+        "columns": [
+          { "key": "name", "label": "Name" },
+          { "key": "species", "label": "Species" },
+          { "key": "location", "label": "Location" },
+          { "key": "status", "label": "Water" }
+        ],
+        "onRowClick": { "$action": "navigate", "to": "/plants/:id" },
+        "emptyText": "No plants match."
+      }
+    },
+    "new-dialog": {
+      "type": "Dialog",
+      "props": {
+        "title": "New plant",
+        "open": { "$state": "newOpen" },
+        "onClose": { "$action": "setState", "path": "newOpen", "value": false }
+      },
+      "children": ["new-form"]
+    },
+    "new-form": {
+      "type": "Form",
+      "props": {
+        "submitLabel": "Add plant",
+        "onSubmit": {
+          "$action": "tool",
+          "name": "createPlant",
+          "args": {
+            "name": { "$state": "draft.name" },
+            "species": { "$state": "draft.species" },
+            "location": { "$state": "draft.location" },
+            "waterEveryDays": { "$state": "draft.waterEveryDays" }
+          },
+          "then": [
+            { "refresh": ["plants"] },
+            { "setState": { "path": "newOpen", "value": false } },
+            { "setState": { "path": "draft", "value": { "name": "", "species": "", "location": "", "waterEveryDays": "7" } } }
+          ]
+        }
+      },
+      "children": ["field-name", "field-species", "field-location", "field-water"]
+    },
+    "field-name": {
+      "type": "TextInput",
+      "props": {
+        "label": "Name",
+        "value": { "$state": "draft.name" },
+        "onChange": { "$action": "setState", "path": "draft.name", "value": { "$event": "" } }
+      }
+    },
+    "field-species": {
+      "type": "TextInput",
+      "props": {
+        "label": "Species",
+        "value": { "$state": "draft.species" },
+        "onChange": { "$action": "setState", "path": "draft.species", "value": { "$event": "" } }
+      }
+    },
+    "field-location": {
+      "type": "TextInput",
+      "props": {
+        "label": "Location",
+        "value": { "$state": "draft.location" },
+        "onChange": { "$action": "setState", "path": "draft.location", "value": { "$event": "" } }
+      }
+    },
+    "field-water": {
+      "type": "TextInput",
+      "props": {
+        "label": "Water every (days)",
+        "type": "number",
+        "value": { "$state": "draft.waterEveryDays" },
+        "onChange": { "$action": "setState", "path": "draft.waterEveryDays", "value": { "$event": "" } }
+      }
+    }
+  }
+}

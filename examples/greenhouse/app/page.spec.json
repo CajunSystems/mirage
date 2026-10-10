@@ -1,0 +1,38 @@
+{
+  "version": 1,
+  "root": "page",
+  "data": {
+    "summary": { "tool": "greenhouseSummary" },
+    "thirsty": { "tool": "listPlants", "args": { "needsWater": true } }
+  },
+  "elements": {
+    "page": { "type": "Stack", "props": { "gap": "lg" }, "children": ["header", "stats", "thirsty-card"] },
+    "header": { "type": "Row", "props": { "align": "between" }, "children": ["title", "all-plants"] },
+    "title": { "type": "Heading", "props": { "text": "Today", "level": 1 } },
+    "all-plants": {
+      "type": "Button",
+      "props": { "label": "All plants", "onPress": { "$action": "navigate", "to": "/plants" } }
+    },
+    "stats": { "type": "Grid", "props": { "columns": 3 }, "children": ["stat-total", "stat-thirsty", "stat-locations"] },
+    "stat-total": { "type": "Stat", "props": { "label": "Plants", "value": { "$data": "summary", "path": "total" } } },
+    "stat-thirsty": {
+      "type": "Stat",
+      "props": { "label": "Need water", "value": { "$data": "summary", "path": "needsWater" }, "hint": "Due today or overdue" }
+    },
+    "stat-locations": { "type": "Stat", "props": { "label": "Locations", "value": { "$data": "summary", "path": "locations" } } },
+    "thirsty-card": { "type": "Card", "props": { "title": "Needs water" }, "children": ["thirsty-table"] },
+    "thirsty-table": {
+      "type": "Table",
+      "props": {
+        "rows": { "$data": "thirsty" },
+        "columns": [
+          { "key": "name", "label": "Plant" },
+          { "key": "location", "label": "Location" },
+          { "key": "daysSinceWatered", "label": "Days since watered" }
+        ],
+        "onRowClick": { "$action": "navigate", "to": "/plants/:id" },
+        "emptyText": "Everything is watered."
+      }
+    }
+  }
+}
