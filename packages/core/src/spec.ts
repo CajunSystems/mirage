@@ -99,3 +99,13 @@ export type GenerateEvent =
   | { type: "delta"; text: string }
   | { type: "retry"; attempt: number; errors: { path: string; message: string }[] }
   | { type: "error"; message: string; errors?: { path: string; message: string }[] };
+
+/**
+ * Removes a Markdown code fence around model output, which some models add despite instructions.
+ * Works on partial text while streaming: a closing fence that has not arrived yet is fine.
+ */
+export function stripJsonFence(text: string): string {
+  const open = /^\s*```[a-zA-Z]*[ \t]*(?:\n|$)/.exec(text);
+  if (!open) return text;
+  return text.slice(open[0].length).replace(/\n?[ \t]*`{0,3}\s*$/, "");
+}

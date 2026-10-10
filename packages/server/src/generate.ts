@@ -1,5 +1,5 @@
 import { streamText, type LanguageModel } from "ai";
-import { validateSpec, type Catalog, type Spec, type ToolSignature, type ValidationError } from "@mirage/core";
+import { stripJsonFence, validateSpec, type Catalog, type Spec, type ToolSignature, type ValidationError } from "@mirage/core";
 import { buildPrompt, type PromptInput } from "./prompt.js";
 
 export type GenerateOptions = {
@@ -53,7 +53,7 @@ export async function generateSpec(options: GenerateOptions): Promise<GenerateRe
     }
     let parsed: unknown;
     try {
-      parsed = JSON.parse(stripFences(text));
+      parsed = JSON.parse(stripJsonFence(text));
     } catch (error) {
       errors = [{ path: "(root)", message: `output is not valid JSON: ${(error as Error).message}` }];
       repair = { errors, previous: text };
@@ -65,10 +65,4 @@ export async function generateSpec(options: GenerateOptions): Promise<GenerateRe
     repair = { errors, previous: text };
   }
   return { ok: false, errors, attempts: maxRepairs + 1 };
-}
-
-/** Some models wrap JSON in a Markdown fence despite instructions. */
-function stripFences(text: string): string {
-  const match = /^\s*```(?:json)?\s*\n([\s\S]*?)\n\s*```\s*$/.exec(text);
-  return match ? match[1]! : text;
 }

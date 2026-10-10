@@ -39,6 +39,8 @@ export type ResolveOptions = {
   allowLocked?: boolean;
   /** Wraps the configured model for this call (for `mirage eval`, which records responses and usage). */
   wrapModel?: (model: LanguageModel) => LanguageModel;
+  /** Write a successful generation to the cache. Default true; `mirage eval` turns it off. */
+  writeCache?: boolean;
   signal?: AbortSignal;
 };
 
@@ -162,7 +164,9 @@ export function createMirageServer(options: MirageServerOptions) {
       }
       keys.add(key);
       generatedKeys.set(info.path, keys);
-      if (mode === "live") memory.set(key, result.spec, intent.frontmatter.ttl);
+      if (opts.writeCache === false) {
+        /* measuring only */
+      } else if (mode === "live") memory.set(key, result.spec, intent.frontmatter.ttl);
       else await fileCache.set(key, result.spec).catch((e: unknown) => log(`could not write cache: ${String(e)}`));
       return done(result.spec, "generated");
     } catch (error) {

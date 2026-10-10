@@ -291,7 +291,7 @@ CLI:
 - `mirage regen <route> [--write]`: generates again, ignoring caches, and prints a diff against `page.spec.json`.
 - `mirage eject <route> [--keep-intent]`: writes a `page.tsx` that renders the same tree with plain JSX.
 - `mirage init [dir]`: scaffolds a new app.
-- `mirage eval [route] [--runs n] [--record file] [--report file]`: generates each route `n` times (default 3), ignoring caches, and reports how many specs were valid on the first try, valid after repair, or failed, with the most common validation errors and token use. `--record` saves the model responses from successful runs.
+- `mirage eval [route] [--runs n] [--record file] [--report file]`: generates each route `n` times (default 3), ignoring caches, and reports how many specs were valid on the first try, valid after repair, or failed, with the most common validation errors and token use. It writes nothing to the cache and exits non-zero if any run ends without a valid spec. `--record` saves the model responses from successful runs.
 
 ### Testing against real model output
 

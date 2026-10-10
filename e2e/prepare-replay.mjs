@@ -12,7 +12,7 @@ const recording = join(here, "fixtures/greenhouse.recording.json");
 if (!existsSync(recording)) throw new Error(`Missing ${recording}. Record it with: pnpm eval:record`);
 
 rmSync(target, { recursive: true, force: true });
-const skip = new Set(["node_modules", "dist", ".mirage", ".e2e", "page.spec.json"]);
+const skip = new Set(["node_modules", "dist", ".mirage", ".e2e", ".env", "page.spec.json"]);
 mkdirSync(target, { recursive: true });
 // Entry by entry: cpSync refuses to copy a directory into its own subdirectory, even with a filter.
 for (const entry of readdirSync(example)) {

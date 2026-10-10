@@ -313,6 +313,14 @@ describe("record and replay", () => {
     expect(model.doStreamCalls.length).toBe(2);
   });
 
+  it("does not cache a generation when writeCache is false", async () => {
+    const model = mockModel([validSpec, validSpec]);
+    const s = server({ model });
+    expect(await s.resolveSpec("/plants", {}, () => {}, { force: true, writeCache: false })).toMatchObject({ ok: true });
+    expect((await generate(s, "/plants")).at(-1)).toMatchObject({ type: "spec", source: "generated" });
+    expect(model.doStreamCalls.length).toBe(2);
+  });
+
   it("fails loudly when the prompt was not recorded", async () => {
     const events = await generate(server({ model: replayModel(emptyRecording()) }), "/plants");
     expect(events.at(-1)).toMatchObject({ type: "error", message: expect.stringContaining("mirage eval --record") });

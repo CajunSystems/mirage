@@ -184,6 +184,7 @@ export async function evaluate(
   const recordPath = options.record ? resolve(options.record) : undefined;
   const recording: Recording = recordPath && existsSync(recordPath) ? (JSON.parse(await readFile(recordPath, "utf8")) as Recording) : emptyRecording();
   const results: EvalRun[] = [];
+  const refreshed = new Set<string>();
 
   await withProject(root, async (project) => {
     const routes = pickRoutes(project, route, !route || Boolean(options.all)).filter((r) => !r.pagePath);
@@ -204,7 +205,7 @@ export async function evaluate(
               run.errors.push(...(e.errors ?? []));
             }
           },
-          { force: true, wrapModel: (model) => recordingModel(model, (call) => calls.push(call)) },
+          { force: true, writeCache: false, wrapModel: (model) => recordingModel(model, (call) => calls.push(call)) },
         );
         run.ms = Date.now() - started;
         run.inputTokens = calls.reduce((n, c) => n + (c.usage.inputTokens ?? 0), 0);
@@ -214,7 +215,15 @@ export async function evaluate(
         else if (result.status === 503) throw new Error(result.message);
         results.push(run);
         // Only successful runs are recorded, so replaying never reproduces a failed generation.
-        if (result.ok) for (const call of calls) recording.responses[call.key] = { route: info.path, text: call.text };
+        if (result.ok) {
+          // The first success for a route replaces that route's old responses, so keys from
+          // earlier prompts do not pile up. Routes with no success this time keep theirs.
+          if (!refreshed.has(info.path)) {
+            for (const [key, entry] of Object.entries(recording.responses)) if (entry.route === info.path) delete recording.responses[key];
+            refreshed.add(info.path);
+          }
+          for (const call of calls) recording.responses[call.key] = { route: info.path, text: call.text };
+        }
         console.log(`${info.path} run ${i}/${runs}: ${run.outcome}${run.attempts > 1 ? ` (${run.attempts} attempts)` : ""}, ${(run.ms / 1000).toFixed(1)}s${run.message && run.outcome === "error" ? `: ${run.message}` : ""}`);
       }
     }
@@ -236,7 +245,8 @@ export async function evaluate(
     await writeFile(resolve(options.report), JSON.stringify({ runs: results }, null, 2) + "\n");
     console.log(`Report -> ${options.report}`);
   }
-  if (results.some((r) => r.outcome === "error")) process.exitCode = 1;
+  // Non-zero when any run ended without a valid spec, so `mirage eval` can gate CI or scripts.
+  if (results.some((r) => r.outcome === "error" || r.outcome === "failed")) process.exitCode = 1;
   return results;
 }
 

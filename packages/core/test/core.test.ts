@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { defineCatalog, defineTool, isSafePath, toolSignature, validateSpec, z, type Spec } from "@mirage/core";
+import { defineCatalog, defineTool, isSafePath, stripJsonFence, toolSignature, validateSpec, z, type Spec } from "@mirage/core";
 
 const Noop = () => null;
 const catalog = defineCatalog({
@@ -171,5 +171,20 @@ describe("schemas", () => {
     const sig = toolSignature("listPlants", tool);
     expect(JSON.stringify(sig)).not.toContain("handler");
     expect(sig).toMatchSnapshot();
+  });
+});
+
+describe("stripJsonFence", () => {
+  it("removes a complete or still-streaming Markdown fence", () => {
+    expect(stripJsonFence('{"a":1}')).toBe('{"a":1}');
+    expect(stripJsonFence('```json\n{"a":1}\n```')).toBe('{"a":1}');
+    expect(stripJsonFence('```\n{"a":1}\n```\n')).toBe('{"a":1}');
+    expect(stripJsonFence('```json\n{"a":')).toBe('{"a":');
+    expect(stripJsonFence('```json\n{"a":1}\n`')).toBe('{"a":1}');
+    expect(stripJsonFence("```js")).toBe("");
+  });
+
+  it("leaves backticks inside the JSON alone", () => {
+    expect(stripJsonFence('{"code":"```"}')).toBe('{"code":"```"}');
   });
 });

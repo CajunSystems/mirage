@@ -8,6 +8,7 @@ const cli = "node packages/cli/dist/bin.js";
 // - locked: the production build of examples/greenhouse with its committed specs (no model).
 // - replay: a copy without committed specs, generating every page from recorded model responses.
 //   Skipped until e2e/fixtures/greenhouse.recording.json exists (`pnpm eval:record`).
+// Servers are never reused: a server left on 4173/4174 could be serving an older build.
 export default defineConfig({
   testDir: ".",
   outputDir: "./test-results",
@@ -26,7 +27,7 @@ export default defineConfig({
       cwd: "..",
       url: "http://localhost:4173",
       timeout: 120_000,
-      reuseExistingServer: !process.env.CI,
+      reuseExistingServer: false,
     },
     ...(recorded
       ? [
@@ -35,7 +36,7 @@ export default defineConfig({
             cwd: "..",
             url: "http://localhost:4174",
             timeout: 120_000,
-            reuseExistingServer: !process.env.CI,
+            reuseExistingServer: false,
           },
         ]
       : []),

@@ -33,7 +33,9 @@ Choices made while building v1, including answers to the open questions in the R
 ## Model evaluation (M7)
 
 - **Recordings are keyed by a hash of the prompt messages**, not by route or call order. Replay is then exact for every prompt that was recorded, including repair turns (whose prompt contains the previous output and its errors), and a stale recording fails loudly. The prompt contains no file paths, so a recording made in one checkout replays in another.
-- **`mirage eval --record` keeps only successful runs.** Replaying a recording therefore never reproduces a failed generation. When a route is run several times, the last successful run's responses win.
+- **`mirage eval --record` keeps only successful runs.** Replaying a recording therefore never reproduces a failed generation. When a route is run several times, the last successful run's responses win. A route's first successful run replaces its old responses, so keys from earlier prompts do not pile up; a route with no successful run keeps its old ones.
+- **`mirage eval` measures without side effects:** it writes nothing to the spec cache, and it exits non-zero when any run ends without a valid spec (`failed` or `error`), so it can gate a script or CI job.
+- **Fence stripping is shared.** `stripJsonFence` in `@mirage/core` runs on the server before parsing and in the client's streaming preview, so a model that wraps its JSON in a Markdown fence still streams progressively.
 - **The replay E2E run uses a copy of the example** (`examples/greenhouse/.e2e/replay`, gitignored) with the committed specs removed, rather than a flag that makes Mirage ignore committed specs. No framework code exists only for tests. The copy sits inside the example so its imports resolve from the example's `node_modules`.
 - **E2E assertions follow the intents, not the layout.** The same suite runs against committed and generated specs, which may differ in structure.
 - **Results, Anthropic `claude-sonnet-5-5`, 2026-10-10** (`pnpm eval`, 3 runs per route):
