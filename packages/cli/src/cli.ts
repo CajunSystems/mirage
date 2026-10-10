@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { cac } from "cac";
 import * as commands from "./commands.js";
 
@@ -34,7 +35,7 @@ export function run(argv = process.argv) {
     .action((route: string | undefined, o) => commands.evaluate(root(o), route, { all: o.all, runs: o.runs, record: o.record, report: o.report }));
   cli.command("init [dir]", "Create a new Mirage app").action((dir: string | undefined) => commands.init(dir ?? "."));
   cli.help();
-  cli.version("0.1.0");
+  cli.version((JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8")) as { version: string }).version);
 
   cli.parse(argv, { run: false });
   Promise.resolve(cli.runMatchedCommand()).catch((error: unknown) => {

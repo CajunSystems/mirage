@@ -10,9 +10,13 @@
     "clean": "rm -rf packages/*/dist packages/*/tsconfig.tsbuildinfo",
     "e2e": "playwright test -c e2e/playwright.config.ts",
     "eval": "node packages/cli/dist/bin.js eval --root examples/greenhouse",
-    "eval:record": "node packages/cli/dist/bin.js eval --root examples/greenhouse --runs 1 --record e2e/fixtures/greenhouse.recording.json"
+    "eval:record": "node packages/cli/dist/bin.js eval --root examples/greenhouse --runs 1 --record e2e/fixtures/greenhouse.recording.json",
+    "changeset": "changeset",
+    "release": "pnpm build && changeset publish",
+    "smoke:pack": "node scripts/pack-smoke.mjs"
   },
   "devDependencies": {
+    "@changesets/cli": "^3.0.3",
     "@playwright/test": "1.56.1",
     "@testing-library/react": "^16.3.0",
     "@types/node": "^22.10.0",

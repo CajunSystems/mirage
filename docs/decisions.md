@@ -53,6 +53,14 @@ Choices made while building v1, including answers to the open questions in the R
 
   The first real run failed every attempt, because of the structured-output problem above. After that was fixed, the only error was a missing `"version": 1`, which the prompt never asked for; the prompt now states the top-level shape. The recorded responses (`e2e/fixtures/greenhouse.recording.json`) pass the full E2E suite, so the generated pages do what the intents ask, not just validate. Three runs per route on one provider is a small sample: rerun `pnpm eval` with more runs after prompt or catalog changes.
 
+## Packaging (M8)
+
+- **npm scope `@mirage`.** The unscoped `mirage` belongs to Mirage JS. The CLI binary is `mirage`.
+- **`zod` and `ai` are peer dependencies.** The app's catalog and tools are built with the app's zod, and its model comes from the app's AI SDK provider. Two copies would make zod schemas and model types incompatible across the boundary (the reason kinds are tagged with `Symbol.for`). `@ai-sdk/provider` stays a regular dependency because only its types are used.
+- **One version for all packages** (a Changesets `fixed` group). They are released and tested together, and the CLI, Vite plugin and server must agree on the spec and endpoints.
+- **The first publish is manual setup, not code:** it needs the npm org and an `NPM_TOKEN` secret. After that, releases go through the "Version packages" PR.
+- **The example and `mirage init` declare everything they import**, including `@types/react`. Before M8 they relied on the monorepo root for it; `pnpm smoke:pack` builds the example outside the monorepo to catch that class of mistake.
+
 ## Production
 
 `mirage build` produces `dist/client` (Vite) and `dist/server/index.js`. The server bundle contains the app's config, catalog, tools, intents, and specs. Packages stay external. The server serves the client, the tools endpoint, and generation. Committed specs are inlined into the client, so locked routes never call `/__mirage/generate` and need no model or API key.

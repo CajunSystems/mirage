@@ -329,7 +329,7 @@ docs/
   milestones.md
 ```
 
-Package names are placeholders (`@mirage/*`). The unscoped name `mirage` is taken on npm by Mirage JS, so pick the final scope before publishing.
+Packages are published under the `@mirage` npm scope (the unscoped name `mirage` is taken on npm by Mirage JS). The CLI binary is `mirage`.
 
 Development:
 
@@ -338,7 +338,12 @@ pnpm install
 pnpm build        # tsc -b across packages
 pnpm test         # vitest: core, renderer, server (mock model), vite codegen, eject
 pnpm typecheck    # packages + the example app
+pnpm e2e          # Playwright: committed specs, and pages generated from a recording
+pnpm smoke:pack   # pack, install outside the monorepo, build and serve
+pnpm changeset    # describe a change for the next release
 ```
+
+Releases: changes to published packages need a changeset (`pnpm changeset`). On `main`, the release workflow keeps a "Version packages" PR up to date; merging it publishes every `@mirage/*` package to npm with provenance.
 
 ---
 
