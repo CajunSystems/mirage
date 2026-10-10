@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useSyncExternalStore } from "react";
 import { useNavigate, useParams } from "react-router";
-import type { Action, DataResult, DataSource } from "@mirage/core";
+import type { Action, DataResult, DataSource } from "@cajunsystems/mirage-core";
 import { MirageRuntime, httpCallTool, type CallTool } from "./runtime.js";
 
 export type UseMirageOptions = {

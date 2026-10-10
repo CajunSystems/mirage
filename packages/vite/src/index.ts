@@ -1,8 +1,8 @@
 import { relative } from "node:path";
 import { getRequestListener } from "@hono/node-server";
 import type { Plugin, ViteDevServer } from "vite";
-import { createMirageServer, type MirageConfig, type MirageServer } from "@mirage/server";
-import type { Catalog } from "@mirage/core";
+import { createMirageServer, type MirageConfig, type MirageServer } from "@cajunsystems/mirage-server";
+import type { Catalog } from "@cajunsystems/mirage-core";
 import { routesModule, serverModule } from "./codegen.js";
 import { findConfigFile, projectPaths, projectRoutes, type ProjectPaths } from "./project.js";
 
@@ -21,7 +21,7 @@ const SERVER_ID = "virtual:mirage/server";
 /** Entry of the production server bundle built by `mirage build`. */
 export const SERVER_MAIN_ID = "virtual:mirage/server-main";
 const SERVER_MAIN = `import { createServer } from "${SERVER_ID}";
-import { startProductionServer } from "@mirage/vite/node";
+import { startProductionServer } from "@cajunsystems/mirage-vite/node";
 import { fileURLToPath } from "node:url";
 startProductionServer({ mirage: createServer(), clientDir: fileURLToPath(new URL("../client", import.meta.url)) });
 `;

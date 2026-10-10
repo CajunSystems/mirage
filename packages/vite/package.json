@@ -1,5 +1,5 @@
 {
-  "name": "@mirage/vite",
+  "name": "@cajunsystems/mirage-vite",
   "version": "0.0.0",
   "description": "Mirage Vite plugin: file-based routes, dev middleware, HMR for intents, and the production server.",
   "keywords": [
@@ -51,8 +51,8 @@
   },
   "dependencies": {
     "@hono/node-server": "^1.19.0",
-    "@mirage/core": "workspace:*",
-    "@mirage/server": "workspace:*",
+    "@cajunsystems/mirage-core": "workspace:*",
+    "@cajunsystems/mirage-server": "workspace:*",
     "hono": "^4.9.0"
   },
   "peerDependencies": {

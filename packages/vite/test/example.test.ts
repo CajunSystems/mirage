@@ -2,9 +2,9 @@ import { readFileSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { toolsFromModule, validateSpec, type Catalog } from "@mirage/core";
-import { parseIntent } from "@mirage/server";
-import { projectPaths, projectRoutes, routesModule, serverModule } from "@mirage/vite";
+import { toolsFromModule, validateSpec, type Catalog } from "@cajunsystems/mirage-core";
+import { parseIntent } from "@cajunsystems/mirage-server";
+import { projectPaths, projectRoutes, routesModule, serverModule } from "@cajunsystems/mirage-vite";
 
 const example = resolve(dirname(fileURLToPath(import.meta.url)), "../../../examples/greenhouse");
 const paths = projectPaths(example, {});

@@ -12,9 +12,9 @@ import {
   type RecordedCall,
   type Recording,
   type RouteInfo,
-} from "@mirage/server";
-import { SERVER_MAIN_ID } from "@mirage/vite";
-import type { GenerateEvent, Spec } from "@mirage/core";
+} from "@cajunsystems/mirage-server";
+import { SERVER_MAIN_ID } from "@cajunsystems/mirage-vite";
+import type { GenerateEvent, Spec } from "@cajunsystems/mirage-core";
 import { ejectSpec } from "./eject.js";
 import { openProject, type Project } from "./project.js";
 import { writeTemplate } from "./template.js";
@@ -57,7 +57,7 @@ export async function dev(root: string, options: { port?: number; host?: string 
   const vite = await createServer({ root: resolve(root), server: { port: options.port, host: options.host } });
   if (!vite.config.plugins.some((p) => p.name === "mirage")) {
     await vite.close();
-    throw new Error("vite.config.ts must include the mirage() plugin from @mirage/vite");
+    throw new Error("vite.config.ts must include the mirage() plugin from @cajunsystems/mirage-vite");
   }
   await vite.listen();
   vite.printUrls();
@@ -83,7 +83,7 @@ export async function buildApp(root: string) {
   await build({ root, build: { outDir: join(outDir, "client"), emptyOutDir: true } });
   await build({
     root,
-    // Only app code is bundled; packages (including linked @mirage/*) resolve from node_modules.
+    // Only app code is bundled; packages (including linked @cajunsystems/mirage-*) resolve from node_modules.
     ssr: { external: true },
     build: {
       ssr: true,

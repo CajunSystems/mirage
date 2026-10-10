@@ -7,9 +7,9 @@ import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { cleanup, render, waitFor } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router";
 import type { ComponentType } from "react";
-import type { Catalog, Spec } from "@mirage/core";
-import { MirageView, httpCallTool } from "@mirage/react";
-import { createMirageServer, scanRoutes } from "@mirage/server";
+import type { Catalog, Spec } from "@cajunsystems/mirage-core";
+import { MirageView, httpCallTool } from "@cajunsystems/mirage-react";
+import { createMirageServer, scanRoutes } from "@cajunsystems/mirage-server";
 import { ejectSpec } from "../src/eject.js";
 
 const here = dirname(fileURLToPath(import.meta.url));

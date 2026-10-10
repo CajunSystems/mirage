@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { stripJsonFence, type GenerateEvent, type PartialSpec, type Spec, type ValidationError } from "@mirage/core";
+import { stripJsonFence, type GenerateEvent, type PartialSpec, type Spec, type ValidationError } from "@cajunsystems/mirage-core";
 import { parsePartialJson } from "./partial-json.js";
 
 export type SpecStatus =

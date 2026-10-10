@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { defineCatalog, defineTool, isSafePath, stripJsonFence, toolSignature, validateSpec, z, type Spec } from "@mirage/core";
+import { defineCatalog, defineTool, isSafePath, stripJsonFence, toolSignature, validateSpec, z, type Spec } from "@cajunsystems/mirage-core";
 
 const Noop = () => null;
 const catalog = defineCatalog({

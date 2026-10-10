@@ -11,12 +11,12 @@ const files: Record<string, string> = {
       scripts: { dev: "mirage dev", build: "mirage build", start: "node dist/server/index.js", lock: "mirage lock --all" },
       dependencies: {
         "@ai-sdk/anthropic": "^4.0.0",
-        "@mirage/catalog-basic": "^0.1.0",
-        "@mirage/cli": "^0.1.0",
-        "@mirage/core": "^0.1.0",
-        "@mirage/react": "^0.1.0",
-        "@mirage/server": "^0.1.0",
-        "@mirage/vite": "^0.1.0",
+        "@cajunsystems/mirage-catalog-basic": "^0.1.0",
+        "@cajunsystems/mirage-cli": "^0.1.0",
+        "@cajunsystems/mirage-core": "^0.1.0",
+        "@cajunsystems/mirage-react": "^0.1.0",
+        "@cajunsystems/mirage-server": "^0.1.0",
+        "@cajunsystems/mirage-vite": "^0.1.0",
         react: "^19.1.0",
         "react-dom": "^19.1.0",
         "react-router": "^7.9.0",
@@ -37,13 +37,13 @@ const files: Record<string, string> = {
   ),
   ".gitignore": "node_modules\ndist\n.mirage\n.env\n",
   "vite.config.ts": `import react from "@vitejs/plugin-react";
-import { mirage } from "@mirage/vite";
+import { mirage } from "@cajunsystems/mirage-vite";
 import { defineConfig } from "vite";
 
 export default defineConfig({ plugins: [react(), mirage()] });
 `,
   "mirage.config.ts": `import { anthropic } from "@ai-sdk/anthropic";
-import { defineConfig } from "@mirage/server";
+import { defineConfig } from "@cajunsystems/mirage-server";
 
 export default defineConfig({
   model: anthropic("claude-sonnet-5-5"),
@@ -51,7 +51,7 @@ export default defineConfig({
   appDir: "./app",
 });
 `,
-  "catalog.ts": `import { basicCatalog } from "@mirage/catalog-basic";
+  "catalog.ts": `import { basicCatalog } from "@cajunsystems/mirage-catalog-basic";
 
 // Add your own components with defineCatalog({ ...basicCatalog.entries, MyThing: { ... } }).
 export const catalog = basicCatalog;
@@ -69,12 +69,12 @@ export const catalog = basicCatalog;
   </body>
 </html>
 `,
-  "src/main.tsx": `/// <reference types="@mirage/vite/client" />
+  "src/main.tsx": `/// <reference types="@cajunsystems/mirage-vite/client" />
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import { MirageApp } from "@mirage/react";
+import { MirageApp } from "@cajunsystems/mirage-react";
 import { routes } from "virtual:mirage/routes";
-import "@mirage/catalog-basic/styles.css";
+import "@cajunsystems/mirage-catalog-basic/styles.css";
 import { catalog } from "../catalog";
 
 createRoot(document.getElementById("root")!).render(
@@ -83,7 +83,7 @@ createRoot(document.getElementById("root")!).render(
   </StrictMode>,
 );
 `,
-  "app/layout.tsx": `import { Outlet } from "@mirage/react";
+  "app/layout.tsx": `import { Outlet } from "@cajunsystems/mirage-react";
 
 export default function RootLayout() {
   return (
@@ -93,7 +93,7 @@ export default function RootLayout() {
   );
 }
 `,
-  "app/tools.ts": `import { defineTool, z } from "@mirage/core";
+  "app/tools.ts": `import { defineTool, z } from "@cajunsystems/mirage-core";
 
 export const getGreeting = defineTool({
   description: "Returns a greeting for the current time of day.",

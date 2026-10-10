@@ -1,5 +1,5 @@
 {
-  "name": "@mirage/catalog-basic",
+  "name": "@cajunsystems/mirage-catalog-basic",
   "version": "0.0.0",
   "description": "Default component catalog for Mirage, styled with plain CSS variables.",
   "keywords": [
@@ -45,7 +45,7 @@
     "provenance": true
   },
   "dependencies": {
-    "@mirage/core": "workspace:*"
+    "@cajunsystems/mirage-core": "workspace:*"
   },
   "peerDependencies": {
     "react": "^19.0.0",

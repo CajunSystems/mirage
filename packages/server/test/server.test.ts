@@ -4,8 +4,8 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { MockLanguageModelV4, convertArrayToReadableStream } from "ai/test";
-import type { GenerateEvent, Spec } from "@mirage/core";
-import { basicCatalog } from "@mirage/catalog-basic";
+import type { GenerateEvent, Spec } from "@cajunsystems/mirage-core";
+import { basicCatalog } from "@cajunsystems/mirage-catalog-basic";
 import {
   buildPrompt,
   cacheKey,
@@ -20,7 +20,7 @@ import {
   scanRoutes,
   toolsHash,
   type MirageConfig,
-} from "@mirage/server";
+} from "@cajunsystems/mirage-server";
 
 const fixtures = fileURLToPath(new URL("./fixtures", import.meta.url));
 const appDir = join(fixtures, "app");

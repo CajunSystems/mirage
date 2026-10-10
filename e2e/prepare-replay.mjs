@@ -22,7 +22,7 @@ cpSync(join(example, "mirage.config.ts"), join(target, "mirage.config.base.ts"))
 writeFileSync(
   join(target, "mirage.config.ts"),
   `import { readFileSync } from "node:fs";
-import { defineConfig, replayModel } from "@mirage/server";
+import { defineConfig, replayModel } from "@cajunsystems/mirage-server";
 import base from "./mirage.config.base";
 
 const recording = JSON.parse(readFileSync(${JSON.stringify(recording)}, "utf8"));

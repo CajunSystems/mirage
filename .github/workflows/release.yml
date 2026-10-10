@@ -22,7 +22,7 @@ jobs:
       - run: pnpm typecheck
       - run: pnpm test
       # With pending changesets this opens or updates a "Version packages" PR. When that PR is
-      # merged (no changesets left), it publishes every @mirage/* package whose version is not on npm.
+      # merged (no changesets left), it publishes every @cajunsystems/mirage-* package whose version is not on npm.
       - uses: changesets/action@v1
         with:
           version: pnpm changeset version

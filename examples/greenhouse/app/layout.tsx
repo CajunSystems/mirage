@@ -1,5 +1,5 @@
 import { NavLink } from "react-router";
-import { Outlet } from "@mirage/react";
+import { Outlet } from "@cajunsystems/mirage-react";
 
 export default function RootLayout() {
   return (

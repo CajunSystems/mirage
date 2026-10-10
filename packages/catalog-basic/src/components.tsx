@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from "react";
-import type { DataResult } from "@mirage/core";
+import type { DataResult } from "@cajunsystems/mirage-core";
 
 type Handler = (event?: unknown) => void;
 type Gap = "sm" | "md" | "lg";

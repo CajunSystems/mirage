@@ -1,8 +1,8 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { cleanup, render, screen, waitFor } from "@testing-library/react";
-import type { GenerateEvent, Spec } from "@mirage/core";
-import { parsePartialJson, useGeneratedSpec } from "@mirage/react";
+import type { GenerateEvent, Spec } from "@cajunsystems/mirage-core";
+import { parsePartialJson, useGeneratedSpec } from "@cajunsystems/mirage-react";
 
 afterEach(() => {
   cleanup();

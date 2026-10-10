@@ -3,7 +3,7 @@ import { join } from "node:path";
 import { serve } from "@hono/node-server";
 import { serveStatic } from "@hono/node-server/serve-static";
 import { Hono } from "hono";
-import type { MirageServer } from "@mirage/server";
+import type { MirageServer } from "@cajunsystems/mirage-server";
 
 /** Serves the built client and the Mirage API. Used by the server bundle `mirage build` emits. */
 export async function startProductionServer(options: { mirage: MirageServer; clientDir: string; port?: number }) {

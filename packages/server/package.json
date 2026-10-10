@@ -1,5 +1,5 @@
 {
-  "name": "@mirage/server",
+  "name": "@cajunsystems/mirage-server",
   "version": "0.0.0",
   "description": "Mirage server: generates specs from intents with any AI SDK model, plus the tool endpoint, caching and locking.",
   "keywords": [
@@ -43,7 +43,7 @@
   },
   "dependencies": {
     "@ai-sdk/provider": "^4.0.0",
-    "@mirage/core": "workspace:*",
+    "@cajunsystems/mirage-core": "workspace:*",
     "gray-matter": "^4.0.3",
     "hono": "^4.9.0"
   },

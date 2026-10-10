@@ -62,22 +62,22 @@ importers:
       '@ai-sdk/anthropic':
         specifier: ^4.0.0
         version: 4.0.69(zod@4.6.5)
-      '@mirage/catalog-basic':
+      '@cajunsystems/mirage-catalog-basic':
         specifier: workspace:*
         version: link:../../packages/catalog-basic
-      '@mirage/cli':
+      '@cajunsystems/mirage-cli':
         specifier: workspace:*
         version: link:../../packages/cli
-      '@mirage/core':
+      '@cajunsystems/mirage-core':
         specifier: workspace:*
         version: link:../../packages/core
-      '@mirage/react':
+      '@cajunsystems/mirage-react':
         specifier: workspace:*
         version: link:../../packages/react
-      '@mirage/server':
+      '@cajunsystems/mirage-server':
         specifier: workspace:*
         version: link:../../packages/server
-      '@mirage/vite':
+      '@cajunsystems/mirage-vite':
         specifier: workspace:*
         version: link:../../packages/vite
       ai:
@@ -117,7 +117,7 @@ importers:
 
   packages/catalog-basic:
     dependencies:
-      '@mirage/core':
+      '@cajunsystems/mirage-core':
         specifier: workspace:*
         version: link:../core
     devDependencies:
@@ -130,18 +130,18 @@ importers:
 
   packages/cli:
     dependencies:
+      '@cajunsystems/mirage-core':
+        specifier: workspace:*
+        version: link:../core
+      '@cajunsystems/mirage-server':
+        specifier: workspace:*
+        version: link:../server
+      '@cajunsystems/mirage-vite':
+        specifier: workspace:*
+        version: link:../vite
       '@hono/node-server':
         specifier: ^1.19.0
         version: 1.19.17(hono@4.13.11)
-      '@mirage/core':
-        specifier: workspace:*
-        version: link:../core
-      '@mirage/server':
-        specifier: workspace:*
-        version: link:../server
-      '@mirage/vite':
-        specifier: workspace:*
-        version: link:../vite
       cac:
         specifier: ^6.7.14
         version: 6.7.14
@@ -167,7 +167,7 @@ importers:
 
   packages/react:
     dependencies:
-      '@mirage/core':
+      '@cajunsystems/mirage-core':
         specifier: workspace:*
         version: link:../core
     devDependencies:
@@ -186,7 +186,7 @@ importers:
       '@ai-sdk/provider':
         specifier: ^4.0.0
         version: 4.0.20
-      '@mirage/core':
+      '@cajunsystems/mirage-core':
         specifier: workspace:*
         version: link:../core
       gray-matter:
@@ -205,15 +205,15 @@ importers:
 
   packages/vite:
     dependencies:
+      '@cajunsystems/mirage-core':
+        specifier: workspace:*
+        version: link:../core
+      '@cajunsystems/mirage-server':
+        specifier: workspace:*
+        version: link:../server
       '@hono/node-server':
         specifier: ^1.19.0
         version: 1.19.17(hono@4.13.11)
-      '@mirage/core':
-        specifier: workspace:*
-        version: link:../core
-      '@mirage/server':
-        specifier: workspace:*
-        version: link:../server
       hono:
         specifier: ^4.9.0
         version: 4.13.11

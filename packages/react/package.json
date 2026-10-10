@@ -1,5 +1,5 @@
 {
-  "name": "@mirage/react",
+  "name": "@cajunsystems/mirage-react",
   "version": "0.0.0",
   "description": "Mirage React renderer: renders Mirage specs, runs data sources and actions, and streams generated pages.",
   "keywords": [
@@ -42,7 +42,7 @@
     "provenance": true
   },
   "dependencies": {
-    "@mirage/core": "workspace:*"
+    "@cajunsystems/mirage-core": "workspace:*"
   },
   "peerDependencies": {
     "react": "^19.0.0",

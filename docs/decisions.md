@@ -7,12 +7,12 @@ Choices made while building v1, including answers to the open questions in the R
 1. **Polling or subscriptions for `$data`?** No. A data source fetches when it first appears, when its resolved args change (for example a `$state` it reads), and when an action's `{ "refresh": [...] }` effect names it. Nothing else.
 2. **Includes or partials in intent files?** No. An intent is one self-contained Markdown file. Shared structure belongs in `layout.tsx`.
 3. **Element ids across regenerations.** Ids come from the model, which is told to use short kebab-case ids. They are not normalized after generation. The renderer keys React elements by id, so a streamed element never remounts inside one generation. Across regenerations `mirage regen` shows a plain JSON diff. Normalizing ids (for example hashing each element's position) would make those diffs quieter, but it would also make ids opaque to the people reading the spec. Revisit if diffs turn out noisy in practice.
-4. **Design tokens in intents?** No. Tokens live in CSS variables (`--mi-*` in `@mirage/catalog-basic/styles.css`), and the layout or app CSS overrides them.
+4. **Design tokens in intents?** No. Tokens live in CSS variables (`--mi-*` in `@cajunsystems/mirage-catalog-basic/styles.css`), and the layout or app CSS overrides them.
 
 ## Deviations from the brief
 
-- **`z.ref()` and `z.action()`** live on the `z` exported by `@mirage/core` (`import { z } from "@mirage/core"`). That `z` is zod v4 plus the two helpers. Zod's own `z` is left untouched.
-- **Kind tagging uses `Symbol.for("mirage.kind")`** on the schema object, not a module-private map. The user's catalog can be loaded through a different copy of `@mirage/core` than the code that inspects it. Vite's SSR loader does this in the CLI and dev server.
+- **`z.ref()` and `z.action()`** live on the `z` exported by `@cajunsystems/mirage-core` (`import { z } from "@cajunsystems/mirage-core"`). That `z` is zod v4 plus the two helpers. Zod's own `z` is left untouched.
+- **Kind tagging uses `Symbol.for("mirage.kind")`** on the schema object, not a module-private map. The user's catalog can be loaded through a different copy of `@cajunsystems/mirage-core` than the code that inspects it. Vite's SSR loader does this in the CLI and dev server.
 - **Bindings in any prop.** In a spec, every non-action prop accepts either its declared type or a binding (`$data` / `$state` / `$param`). So a heading can show `{ "$data": "plant", "path": "name" }`. Props declared `z.ref()` must be bindings, and the component receives a `DataResult` (`{ data, loading, error }`) for them. Other props receive the plain resolved value. The element renders as a skeleton while a `$data` value it reads is still loading.
 - **`$data` bindings take an optional `path`** (`{ "$data": "plant", "path": "name" }`) so one data source can feed several elements.
 - **Defaults are applied at render time, not during validation.** A validated spec is exactly what the model wrote. `mirage eject` writes the schema defaults into the emitted JSX, so the ejected page renders the same DOM as the spec renderer.
@@ -40,7 +40,7 @@ Choices made while building v1, including answers to the open questions in the R
 - **Recordings are keyed by a hash of the prompt messages**, not by route or call order. Replay is then exact for every prompt that was recorded, including repair turns (whose prompt contains the previous output and its errors), and a stale recording fails loudly. The prompt contains no file paths, so a recording made in one checkout replays in another.
 - **`mirage eval --record` keeps only successful runs.** Replaying a recording therefore never reproduces a failed generation. When a route is run several times, the last successful run's responses win. A route's first successful run replaces its old responses, so keys from earlier prompts do not pile up; a route with no successful run keeps its old ones.
 - **`mirage eval` measures without side effects:** it writes nothing to the spec cache, and it exits non-zero when any run ends without a valid spec (`failed` or `error`), so it can gate a script or CI job.
-- **Fence stripping is shared.** `stripJsonFence` in `@mirage/core` runs on the server before parsing and in the client's streaming preview, so a model that wraps its JSON in a Markdown fence still streams progressively.
+- **Fence stripping is shared.** `stripJsonFence` in `@cajunsystems/mirage-core` runs on the server before parsing and in the client's streaming preview, so a model that wraps its JSON in a Markdown fence still streams progressively.
 - **The replay E2E run uses a copy of the example** (`examples/greenhouse/.e2e/replay`, gitignored) with the committed specs removed, rather than a flag that makes Mirage ignore committed specs. No framework code exists only for tests. The copy sits inside the example so its imports resolve from the example's `node_modules`.
 - **E2E assertions follow the intents, not the layout.** The same suite runs against committed and generated specs, which may differ in structure.
 - **Results, Anthropic `claude-sonnet-5-5`, 2026-10-10** (`pnpm eval`, 3 runs per route):
@@ -55,7 +55,7 @@ Choices made while building v1, including answers to the open questions in the R
 
 ## Packaging (M8)
 
-- **npm scope `@mirage`.** The unscoped `mirage` belongs to Mirage JS. The CLI binary is `mirage`.
+- **Packages are `@cajunsystems/mirage-*`.** The unscoped `mirage` belongs to Mirage JS, and the `mirage` npm org was not available. The CLI binary is still `mirage`, and the framework is still called Mirage.
 - **`zod` and `ai` are peer dependencies.** The app's catalog and tools are built with the app's zod, and its model comes from the app's AI SDK provider. Two copies would make zod schemas and model types incompatible across the boundary (the reason kinds are tagged with `Symbol.for`). `@ai-sdk/provider` stays a regular dependency because only its types are used.
 - **One version for all packages** (a Changesets `fixed` group). They are released and tested together, and the CLI, Vite plugin and server must agree on the spec and endpoints.
 - **The first publish is manual setup, not code:** it needs the npm org and an `NPM_TOKEN` secret. After that, releases go through the "Version packages" PR.

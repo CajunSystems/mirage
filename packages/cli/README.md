@@ -1,4 +1,4 @@
-# @mirage/cli
+# @cajunsystems/mirage-cli
 
 Part of [Mirage](https://github.com/CajunSystems/mirage), a generative-UI framework for React: write a page's intent in Markdown, and a model turns it into a validated JSON spec that renders with your own components.
 

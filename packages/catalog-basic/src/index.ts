@@ -1,10 +1,10 @@
-import { defineCatalog, z } from "@mirage/core";
+import { defineCatalog, z } from "@cajunsystems/mirage-core";
 import * as C from "./components.js";
 
 const gap = z.enum(["sm", "md", "lg"]).default("md");
 const text = z.union([z.string(), z.number()]).nullable();
 
-/** The default Mirage catalog. Import `@mirage/catalog-basic/styles.css` once in your app. */
+/** The default Mirage catalog. Import `@cajunsystems/mirage-catalog-basic/styles.css` once in your app. */
 export const basicCatalog = defineCatalog({
   Stack: {
     description: "Vertical stack of children. The usual page root.",

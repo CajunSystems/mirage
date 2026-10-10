@@ -1,6 +1,6 @@
 import { existsSync } from "node:fs";
 import { resolve } from "node:path";
-import { configDefaults, scanRoutes, type MirageConfig, type RouteInfo } from "@mirage/server";
+import { configDefaults, scanRoutes, type MirageConfig, type RouteInfo } from "@cajunsystems/mirage-server";
 
 export type ProjectPaths = {
   root: string;

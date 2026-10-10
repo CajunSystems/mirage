@@ -1,4 +1,4 @@
-import { defineTool, z } from "@mirage/core";
+import { defineTool, z } from "@cajunsystems/mirage-core";
 import { daysSince, db, needsWater } from "../../../server/db";
 
 export const getPlant = defineTool({

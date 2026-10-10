@@ -11,7 +11,7 @@ The build order for Mirage. Each milestone has a scope and an **Accept** line, a
 | M5: Lock / unlock / regen / eject + build | Done (v1) |
 | M6: Polish | Done (v1) |
 | M7: Real-model generation | Done |
-| M8: Publishable packages | Done, apart from the first publish (needs the `@mirage` npm org and an `NPM_TOKEN` secret) |
+| M8: Publishable packages | Done, apart from the first publish (needs the `cajunsystems` npm org and an `NPM_TOKEN` secret) |
 | M9: Per-route code splitting | Next |
 | M10: Starter app from `mirage init` | Planned |
 | M11: Catalog expansion | Planned |
@@ -59,7 +59,7 @@ The v1 brief used a clinic example. The repo ships `examples/greenhouse` instead
 - Accept: each greenhouse route produces a valid spec on at least one major provider, with first-try validity recorded in `docs/decisions.md`; the E2E suite passes in CI against the recorded fixtures.
 - Needs: an API key in the environment's secrets.
 - Progress:
-  - [x] `recordingModel` / `replayModel` in `@mirage/server`, keyed by prompt hash, with record/replay tests.
+  - [x] `recordingModel` / `replayModel` in `@cajunsystems/mirage-server`, keyed by prompt hash, with record/replay tests.
   - [x] `mirage eval [route] --runs n --record file --report file`, plus `pnpm eval` / `pnpm eval:record` for the greenhouse.
   - [x] Playwright suite in `e2e/`: the `locked` run (production build, committed specs) passes and runs in CI. The `replay` run turns on when the recording exists; checked locally against a throwaway recording that was not committed.
   - [x] Record `e2e/fixtures/greenhouse.recording.json` from a real model (`pnpm eval:record`, Anthropic `claude-sonnet-5-5`). Both E2E runs pass (12/12).
@@ -72,10 +72,10 @@ The v1 brief used a clinic example. The repo ships `examples/greenhouse` instead
 - Progress:
   - [x] Package metadata: description, repository, keywords, `engines`, `sideEffects`, `publishConfig` (public, with provenance), README and LICENSE in every package.
   - [x] Peer dependencies: `zod` and `ai` (shared with the app, so their schemas and types are the same objects), `react`, `react-router`, `vite`. Packages that depend on core or server pass these peers along.
-  - [x] Changesets with all `@mirage/*` packages versioned together; versions start at `0.0.0` so the first release is `0.1.0`.
+  - [x] Changesets with all `@cajunsystems/mirage-*` packages versioned together; versions start at `0.0.0` so the first release is `0.1.0`.
   - [x] `release.yml`: on `main`, opens a "Version packages" PR; merging it publishes to npm with provenance.
   - [x] `pnpm smoke:pack` (and a `pack` CI job): packs every package, installs the tarballs into a copy of the greenhouse app outside the monorepo, then typechecks, builds and serves a locked page and a tool with no model.
-  - [ ] First publish: create the `mirage` org on npmjs.com, add an automation token as the `NPM_TOKEN` repository secret, then merge the "Version packages" PR.
+  - [ ] First publish: make sure the `cajunsystems` org exists on npmjs.com, add an automation token as the `NPM_TOKEN` repository secret, then merge the "Version packages" PR.
 
 ---
 
@@ -90,7 +90,7 @@ The v1 brief used a clinic example. The repo ships `examples/greenhouse` instead
 - Accept: in CI, `mirage init` into a temp dir, then install, build, and start the server; the start page returns 200 and renders its heading.
 
 **M11: Catalog expansion**
-- Add to `@mirage/catalog-basic` the components that M7 shows models reaching for and not finding. Likely candidates: Chart, DatePicker, Pagination, Toast/Alert.
+- Add to `@cajunsystems/mirage-catalog-basic` the components that M7 shows models reaching for and not finding. Likely candidates: Chart, DatePicker, Pagination, Toast/Alert.
 - Accept: each new component has a zod schema with descriptions, renderer tests, and eject parity; JSON Schema snapshots are updated; the prompt stays within an agreed token budget (measured and recorded).
 
 **M12: Stable element ids**

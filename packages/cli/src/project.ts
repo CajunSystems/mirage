@@ -1,9 +1,9 @@
 import { resolve } from "node:path";
 import { createServer, type Plugin, type ViteDevServer } from "vite";
-import { mirage, type MiragePluginApi } from "@mirage/vite";
-import type { MirageServer } from "@mirage/server";
-import type { Catalog } from "@mirage/core";
-import type { ProjectPaths } from "@mirage/vite";
+import { mirage, type MiragePluginApi } from "@cajunsystems/mirage-vite";
+import type { MirageServer } from "@cajunsystems/mirage-server";
+import type { Catalog } from "@cajunsystems/mirage-core";
+import type { ProjectPaths } from "@cajunsystems/mirage-vite";
 
 export type Project = {
   vite: ViteDevServer;

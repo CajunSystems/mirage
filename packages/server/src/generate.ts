@@ -1,5 +1,5 @@
 import { streamText, type LanguageModel } from "ai";
-import { stripJsonFence, validateSpec, type Catalog, type Spec, type ToolSignature, type ValidateOptions, type ValidationError } from "@mirage/core";
+import { stripJsonFence, validateSpec, type Catalog, type Spec, type ToolSignature, type ValidateOptions, type ValidationError } from "@cajunsystems/mirage-core";
 import { buildPrompt, type PromptInput } from "./prompt.js";
 
 export type GenerateOptions = {

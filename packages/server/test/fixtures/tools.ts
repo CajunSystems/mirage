@@ -1,4 +1,4 @@
-import { defineTool, z } from "@mirage/core";
+import { defineTool, z } from "@cajunsystems/mirage-core";
 
 export const ping = defineTool({
   description: "Global tool.",

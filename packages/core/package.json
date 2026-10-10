@@ -1,5 +1,5 @@
 {
-  "name": "@mirage/core",
+  "name": "@cajunsystems/mirage-core",
   "version": "0.0.0",
   "description": "Mirage core: catalogs, tools, the spec format and its validator.",
   "keywords": [

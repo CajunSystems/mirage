@@ -1,5 +1,5 @@
 {
-  "name": "@mirage/cli",
+  "name": "@cajunsystems/mirage-cli",
   "version": "0.0.0",
   "description": "The mirage CLI: dev, build, lock, regen, eject, eval and init.",
   "keywords": [
@@ -46,9 +46,9 @@
   },
   "dependencies": {
     "@hono/node-server": "^1.19.0",
-    "@mirage/core": "workspace:*",
-    "@mirage/server": "workspace:*",
-    "@mirage/vite": "workspace:*",
+    "@cajunsystems/mirage-core": "workspace:*",
+    "@cajunsystems/mirage-server": "workspace:*",
+    "@cajunsystems/mirage-vite": "workspace:*",
     "cac": "^6.7.14",
     "diff": "^8.0.0"
   },
