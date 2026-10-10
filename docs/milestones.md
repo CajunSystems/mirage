@@ -70,7 +70,7 @@ The v1 brief used a clinic example. The repo ships `examples/greenhouse` instead
 - Final package names and scope, `exports`/`files`/`types` fields, peer dependencies (`react`, `react-router`, `ai`, `zod`, `vite`), a changeset-based release flow, and a publish job in CI.
 - Accept: `pnpm pack` for each package installs into a fresh project outside the monorepo, which builds and runs a locked page; a tagged release publishes all packages from CI.
 - Progress:
-  - [x] Package metadata: description, repository, keywords, `engines`, `sideEffects`, `publishConfig` (public, with provenance), README and LICENSE in every package.
+  - [x] Package metadata: description, repository, keywords, `engines`, `sideEffects`, `publishConfig` (public access; CI adds provenance), README and LICENSE in every package.
   - [x] Peer dependencies: `zod` and `ai` (shared with the app, so their schemas and types are the same objects), `react`, `react-router`, `vite`. Packages that depend on core or server pass these peers along.
   - [x] Changesets with all `@cajunsystems/mirage-*` packages versioned together; versions start at `0.0.0` so the first release is `0.1.0`.
   - [x] `release.yml`: on `main`, opens a "Version packages" PR; merging it publishes to npm with provenance.

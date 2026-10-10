@@ -58,6 +58,7 @@ Choices made while building v1, including answers to the open questions in the R
 - **Packages are `@cajunsystems/mirage-*`.** The unscoped `mirage` belongs to Mirage JS, and the `mirage` npm org was not available. The CLI binary is still `mirage`, and the framework is still called Mirage.
 - **`zod` and `ai` are peer dependencies.** The app's catalog and tools are built with the app's zod, and its model comes from the app's AI SDK provider. Two copies would make zod schemas and model types incompatible across the boundary (the reason kinds are tagged with `Symbol.for`). `@ai-sdk/provider` stays a regular dependency because only its types are used.
 - **One version for all packages** (a Changesets `fixed` group). They are released and tested together, and the CLI, Vite plugin and server must agree on the spec and endpoints.
+- **Provenance is set by the release workflow, not `publishConfig`.** npm can only generate provenance in CI, so `provenance: true` in `publishConfig` made every local publish fail (`EUSAGE: Automatic provenance generation not supported`), including the first one.
 - **The first publish is manual setup, not code:** it needs the npm org and an `NPM_TOKEN` secret. After that, releases go through the "Version packages" PR.
 - **The example and `mirage init` declare everything they import**, including `@types/react`. Before M8 they relied on the monorepo root for it; `pnpm smoke:pack` builds the example outside the monorepo to catch that class of mistake.
 
