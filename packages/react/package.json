@@ -1,6 +1,6 @@
 {
   "name": "@cajunsystems/mirage-react",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Mirage React renderer: renders Mirage specs, runs data sources and actions, and streams generated pages.",
   "keywords": [
     "mirage",
