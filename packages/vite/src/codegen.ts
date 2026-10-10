@@ -13,25 +13,33 @@ const modeOf = (route: RouteInfo) => {
   }
 };
 
-/** `virtual:mirage/routes`: route table for the client. */
+/**
+ * `virtual:mirage/routes`: route table for the client. Layouts, committed specs and ejected pages
+ * are dynamic imports, so the bundler splits them per route and the client fetches a route's
+ * files when it is first visited. Shared layouts are one loader, so one chunk.
+ */
 export function routesModule(routes: RouteInfo[], paths: ProjectPaths): string {
-  const imports: string[] = [];
+  const loaders: string[] = [];
   const ids = new Map<string, string>();
   const ref = (file: string, prefix: string) => {
     if (!ids.has(file)) {
       const id = `${prefix}${ids.size}`;
       ids.set(file, id);
-      imports.push(`import ${id} from ${q(file)};`);
+      loaders.push(`const ${id} = () => import(${q(file)});`);
     }
     return ids.get(file)!;
   };
   const entries = routes.map((r) => {
-    const layouts = r.layouts.map((l) => `{ id: ${q(relative(paths.root, l))}, component: ${ref(l, "L")} }`);
-    return `  { path: ${q(r.path)}, mode: ${q(modeOf(r))}, spec: ${r.specPath ? ref(r.specPath, "S") : "undefined"}, page: ${
-      r.pagePath ? ref(r.pagePath, "P") : "undefined"
-    }, layouts: [${layouts.join(", ")}] },`;
+    const mode = modeOf(r);
+    const fields = [`path: ${q(r.path)}`, `mode: ${q(mode)}`];
+    if (r.pagePath) fields.push(`loadPage: ${ref(r.pagePath, "P")}`);
+    // Live routes always generate, so their committed spec is not shipped to the client at all.
+    else if (r.specPath && mode !== "live") fields.push(`loadSpec: ${ref(r.specPath, "S")}`);
+    const layouts = r.layouts.map((l) => `{ id: ${q(relative(paths.root, l))}, load: ${ref(l, "L")} }`);
+    fields.push(`layouts: [${layouts.join(", ")}]`);
+    return `  { ${fields.join(", ")} },`;
   });
-  return `${imports.join("\n")}
+  return `${loaders.join("\n")}
 export const routes = [
 ${entries.join("\n")}
 ];

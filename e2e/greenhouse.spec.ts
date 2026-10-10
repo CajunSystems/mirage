@@ -56,13 +56,30 @@ test("plant page marks a plant as watered", async ({ page }) => {
   await expect(page.getByText(/needs water/i)).toHaveCount(0);
 });
 
-test("no console errors on any page", async ({ page }) => {
+test("no console errors or warnings on any page", async ({ page }) => {
   const errors: string[] = [];
-  page.on("console", (m) => m.type() === "error" && errors.push(m.text()));
+  page.on("console", (m) => (m.type() === "error" || m.type() === "warning") && errors.push(m.text()));
   page.on("pageerror", (e) => errors.push(e.message));
   for (const path of ["/", "/plants", "/plants/basil"]) {
     await page.goto(path);
     await expect(page.locator("h1").first()).toBeVisible(generation);
   }
   expect(errors).toEqual([]);
+});
+
+test("loads a route's files only when it is visited", async ({ page }, info) => {
+  test.skip(info.project.name !== "locked", "code splitting is checked on the production build");
+  const scripts: string[] = [];
+  page.on("response", async (res) => {
+    if (res.request().resourceType() === "script") scripts.push(await res.text().catch(() => ""));
+  });
+  const plantSpecLoaded = () => scripts.some((s) => s.includes("Mark as watered"));
+
+  await page.goto("/");
+  await expect(plant(page, "Boston fern")).toBeVisible();
+  expect(plantSpecLoaded()).toBe(false);
+
+  await plant(page, "Boston fern").click();
+  await expect(page.getByRole("button", { name: /mark as watered/i })).toBeVisible();
+  expect(plantSpecLoaded()).toBe(true);
 });
