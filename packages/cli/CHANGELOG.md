@@ -1,5 +1,14 @@
 # @cajunsystems/mirage-cli
 
+## 0.2.0
+
+### Patch Changes
+
+- Updated dependencies [79d59f2]
+  - @cajunsystems/mirage-vite@0.2.0
+  - @cajunsystems/mirage-core@0.2.0
+  - @cajunsystems/mirage-server@0.2.0
+
 ## 0.1.0
 
 ### Minor Changes

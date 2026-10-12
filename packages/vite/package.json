@@ -1,6 +1,6 @@
 {
   "name": "@cajunsystems/mirage-vite",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Mirage Vite plugin: file-based routes, dev middleware, HMR for intents, and the production server.",
   "keywords": [
     "mirage",

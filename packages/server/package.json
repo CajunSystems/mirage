@@ -1,6 +1,6 @@
 {
   "name": "@cajunsystems/mirage-server",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Mirage server: generates specs from intents with any AI SDK model, plus the tool endpoint, caching and locking.",
   "keywords": [
     "mirage",
