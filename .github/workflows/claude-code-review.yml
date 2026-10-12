@@ -1,23 +1,24 @@
 name: Claude Code Review
 
+# Automatic review on every PR open/push. One direct prompt on one strong model (as in Catalyst),
+# and it must end with a summary comment naming what it read, so a skipped review cannot pass for
+# a clean one.
+
 on:
   pull_request:
     types: [opened, synchronize, ready_for_review, reopened]
-    # Optional: Only run on specific file changes
-    # paths:
-    #   - "src/**/*.ts"
-    #   - "src/**/*.tsx"
-    #   - "src/**/*.js"
-    #   - "src/**/*.jsx"
+
+# A newer push supersedes an in-flight review, so two runs never post verdicts on different diffs.
+concurrency:
+  group: claude-review-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
 
 jobs:
   claude-review:
-    # Optional: Filter by PR author
-    # if: |
-    #   github.event.pull_request.user.login == 'external-contributor' ||
-    #   github.event.pull_request.user.login == 'new-developer' ||
-    #   github.event.pull_request.author_association == 'FIRST_TIME_CONTRIBUTOR'
-
+    # Fork PRs get no secrets or OIDC token, so the action would fail; skip them explicitly instead.
+    if: >-
+      github.event.pull_request.draft == false &&
+      github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -36,10 +37,39 @@ jobs:
         uses: anthropics/claude-code-action@v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-          plugin_marketplaces: 'https://github.com/anthropics/claude-code.git'
-          plugins: 'code-review@claude-code-plugins'
-          prompt: '/code-review:code-review --comment ${{ github.repository }}/pull/${{ github.event.pull_request.number }}'
-          claude_args: '--allowedTools "mcp__github_inline_comment__create_inline_comment"'
-          # See https://github.com/anthropics/claude-code-action/blob/main/docs/usage.md
-          # or https://code.claude.com/docs/en/cli-reference for available options
+          prompt: |
+            REPO: ${{ github.repository }}
+            PR NUMBER: ${{ github.event.pull_request.number }}
+            HEAD COMMIT: ${{ github.event.pull_request.head.sha }}
 
+            Review this pull request for correctness. Do not skip the review for any reason.
+
+            1. Read CLAUDE.md at the repo root. Its "Key invariants" and acceptance-test sections are the
+               bar: the spec is data and is validated before it is served, mode and cache-key rules, the
+               per-route tool allowlist and server-side re-validation, endpoint hardening (JSON content
+               type, Sec-Fetch-Site, params, rate limit, production redaction), shared in-flight
+               generation, peer dependencies and the fixed version group. docs/decisions.md records the
+               reasoning behind each; docs/milestones.md says what the current milestone must accept.
+            2. Get the change with `gh pr view <PR>` and `gh pr diff <PR>`. Read the surrounding code in the
+               checkout for anything the diff alone does not settle: callers, code paths the change
+               interacts with, what the client bundle and the server bundle each contain. You are reviewing
+               HEAD COMMIT: if `gh pr view <PR> --json headRefOid` reports a different commit, a newer
+               push has landed. Post a one-line comment saying this review was superseded, and stop.
+            3. Look for real defects: incorrect logic, races, a spec or tool call that reaches the client
+               or a handler without validation, model output treated as code or HTML, a cache key that
+               misses an input the prompt depends on, a broken CLAUDE.md invariant, missing handling for
+               a case the change itself introduces, a test that does not test what it claims, a change to a
+               published package without a changeset. Skip style nits and anything you cannot ground in
+               the code.
+            4. Before reporting a finding, confirm it by reading the code involved and state the concrete
+               scenario (inputs/state → wrong result). Drop anything you cannot confirm.
+            5. Post each confirmed finding as an inline comment on the relevant line with
+               mcp__github_inline_comment__create_inline_comment.
+            6. ALWAYS finish with exactly one summary comment via `gh pr comment <PR> --body ...`, even when
+               there are no findings. It must list the files you actually read, the number of confirmed
+               findings with a one-line summary of each, and a verdict. Say plainly that you did not build
+               or run anything.
+          claude_args: |
+            --model claude-opus-5-5
+            --max-turns 80
+            --allowedTools "mcp__github_inline_comment__create_inline_comment,Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh pr comment:*),Read,Grep,Glob"
