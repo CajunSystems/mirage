@@ -33,7 +33,9 @@ Choices made while building v1, including answers to the open questions in the R
 - **`Dialog`** was added to the basic catalog. The brief's list has no way to show a form on demand, such as a "New plant" form. `Tabs` keeps its selected tab in component state.
 - **`mirage regen --write`** also overwrites `page.spec.json`. Without the flag, `regen` only refreshes the cache and prints the diff.
 - **`mirage eject`** removes both `page.intent.md` and `page.spec.json` (keep both with `--keep-intent`). When a route has both a `page.tsx` and an intent, the `page.tsx` wins.
-- **Routes are eagerly imported** in `virtual:mirage/routes` (layouts, committed specs, ejected pages). Code splitting per route is a later optimization.
+- **Routes are code-split (M9).** `virtual:mirage/routes` holds dynamic imports (`loadSpec`, `loadPage`, layout `load`) instead of eager imports, and `createMirageRoutes` turns them into React Router `lazy` routes. A route's committed spec, ejected page and layouts are fetched when it is first visited; a layout shared by several routes is one chunk. `MirageRoute` still accepts eager `spec` / `page` / `component` for routes built in code.
+- **Live routes don't ship their committed spec.** They always generate, so the spec is left out of the client entirely.
+- **Lazy routes render nothing while their files load** (an empty `HydrateFallback`). The files are a few kB, and React Router warns without a fallback.
 
 ## Model evaluation (M7)
 

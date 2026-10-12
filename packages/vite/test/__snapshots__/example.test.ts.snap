@@ -1,14 +1,14 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
 exports[`codegen > emits the client route table 1`] = `
-"import L0 from "<root>/app/layout.tsx";
-import S1 from "<root>/app/page.spec.json";
-import S2 from "<root>/app/plants/page.spec.json";
-import S3 from "<root>/app/plants/[id]/page.spec.json";
+"const S0 = () => import("<root>/app/page.spec.json");
+const L1 = () => import("<root>/app/layout.tsx");
+const S2 = () => import("<root>/app/plants/page.spec.json");
+const S3 = () => import("<root>/app/plants/[id]/page.spec.json");
 export const routes = [
-  { path: "/", mode: "cached", spec: S1, page: undefined, layouts: [{ id: "app/layout.tsx", component: L0 }] },
-  { path: "/plants", mode: "cached", spec: S2, page: undefined, layouts: [{ id: "app/layout.tsx", component: L0 }] },
-  { path: "/plants/:id", mode: "cached", spec: S3, page: undefined, layouts: [{ id: "app/layout.tsx", component: L0 }] },
+  { path: "/", mode: "cached", loadSpec: S0, layouts: [{ id: "app/layout.tsx", load: L1 }] },
+  { path: "/plants", mode: "cached", loadSpec: S2, layouts: [{ id: "app/layout.tsx", load: L1 }] },
+  { path: "/plants/:id", mode: "cached", loadSpec: S3, layouts: [{ id: "app/layout.tsx", load: L1 }] },
 ];
 if (import.meta.hot) {
   import.meta.hot.on("mirage:regenerate", (detail) => window.dispatchEvent(new CustomEvent("mirage:regenerate", { detail })));

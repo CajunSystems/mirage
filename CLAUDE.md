@@ -37,12 +37,14 @@ pnpm 10: overrides and allowed build scripts live in `pnpm-workspace.yaml`, not 
   treat every string prop as text.
 - `packages/react` — `MirageView` (renders a spec; one bad element shows an error chip, siblings
   keep rendering), the runtime (`$data` / `$state` / `$param`, actions), `useGeneratedSpec` (NDJSON
-  stream + `parsePartialJson` preview), `MirageApp` / `createMirageRoutes` on React Router 7.
+  stream + `parsePartialJson` preview), `MirageApp` / `createMirageRoutes` on React Router 7
+  (lazy routes from `loadSpec` / `loadPage` / layout `load`; eager `spec` / `page` still work).
 - `packages/server` — Hono app with `/__mirage/generate` and `/__mirage/tools/:name`, the prompt
   builder, `generateSpec` (plain-text `streamText`, validate, repair up to 2 times), the spec cache,
   in-flight dedup, rate limit, and `recordingModel` / `replayModel`.
-- `packages/vite` — route scan, `virtual:mirage/routes` codegen, dev middleware, HMR on intent and
-  spec edits.
+- `packages/vite` — route scan, `virtual:mirage/routes` codegen (dynamic imports, so each route's
+  spec, ejected page and layouts are a chunk loaded on first visit), dev middleware, HMR on intent
+  and spec edits.
 - `packages/cli` — `mirage dev | build | lock | unlock | regen | eject | init | eval`. Loads the
   user's project through Vite's SSR loader.
 - `examples/greenhouse` — the reference app (`/`, `/plants`, `/plants/:id`); E2E runs against it.
@@ -57,7 +59,7 @@ pnpm 10: overrides and allowed build scripts live in `pnpm-workspace.yaml`, not 
   regenerated. `mirage build` validates committed specs because the client inlines them.
 - **Modes:** `locked` never calls the model (missing spec is an error); `cached` prefers
   `page.spec.json`, then the cache, then generates; `live` always generates (with a `ttl` reuse
-  window) and must not ship its committed spec to the client.
+  window) and must not ship its committed spec to the client (no `loadSpec` in its route entry).
 - **Cache key** = hash of intent + catalog schema + tool signatures (+ params with `specPerParams`)
   + spec and generator version. Anything the prompt depends on belongs in it. The prompt contains no
   file paths, so recordings replay in any checkout.
@@ -84,7 +86,8 @@ pnpm 10: overrides and allowed build scripts live in `pnpm-workspace.yaml`, not 
 - **Validator** — `packages/core/test/core.test.ts`: each rejection has a precise error path; the
   JSON Schema and catalog description are snapshot-tested (update snapshots only on intended changes).
 - **Renderer** — `packages/react/test/view.test.tsx` (progressive partial specs, error chip
-  isolation), `stream.test.tsx` (NDJSON stream, retry reset, fenced preview).
+  isolation), `stream.test.tsx` (NDJSON stream, retry reset, fenced preview), `routes.test.tsx`
+  (route files load only on visit, a shared layout loads once, live routes never load a spec).
 - **Server** — `packages/server/test/server.test.ts`: repair loop, cache hit skips the model,
   dedup/abort, CSRF and param checks, rate limit, redaction, record/replay. The prompt snapshot
   changes the cache key and invalidates recordings — re-record (`pnpm eval:record`) when it moves.
@@ -92,7 +95,8 @@ pnpm 10: overrides and allowed build scripts live in `pnpm-workspace.yaml`, not 
   (ejected TSX renders the same DOM as the spec renderer).
 - **E2E** — `e2e/greenhouse.spec.ts` runs twice: `locked` (production build, committed specs, no
   model) and `replay` (generated from `e2e/fixtures/greenhouse.recording.json`). Assertions follow
-  the intents, not the layout. The console test fails on any console error.
+  the intents, not the layout. The console test fails on any console warning or error, and the
+  `locked` run checks that a route's chunk is fetched only when it is visited.
 - **Packaging** — `pnpm smoke:pack`.
 
 ## Working conventions

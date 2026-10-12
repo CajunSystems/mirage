@@ -12,8 +12,8 @@ The build order for Mirage. Each milestone has a scope and an **Accept** line, a
 | M6: Polish | Done (v1) |
 | M7: Real-model generation | Done |
 | M8: Publishable packages | Done: 0.1.0 published |
-| M9: Per-route code splitting | Next |
-| M10: Starter app from `mirage init` | Planned |
+| M9: Per-route code splitting | Done |
+| M10: Starter app from `mirage init` | Next |
 | M11: Catalog expansion | Planned |
 | M12: Stable element ids | Planned |
 
@@ -78,13 +78,14 @@ The v1 brief used a clinic example. The repo ships `examples/greenhouse` instead
   - [x] First publish: 0.1.0 of all six packages, published from a maintainer machine with 2FA (so without provenance). Trusted Publishing is linked for each package.
   - [x] CI publishes through npm Trusted Publishing (OIDC): no npm token is stored, and provenance is automatic. `scripts/publish.mjs` packs with pnpm and publishes with `npm`.
 
----
-
-## Next
-
 **M9: Per-route code splitting**
 - `virtual:mirage/routes` emits dynamic imports for layouts, committed specs, and ejected pages instead of eager imports; React Router `lazy` loads them.
 - Accept: the production build emits one chunk per route; loading `/` does not fetch the `/plants/:id` spec or page chunk; existing renderer and eject tests still pass.
+- Result: the greenhouse build emits one chunk per route spec plus one shared layout chunk, separate from the main bundle. An E2E test checks that loading `/` does not fetch the `/plants/:id` spec and that visiting a plant does; it fails on the eager route table. Unit tests cover lazy loading, live routes skipping their spec, and eager routes. Dev HMR for edited specs still works.
+
+---
+
+## Next
 
 **M10: Starter app from `mirage init`**
 - `mirage init <dir>` writes a runnable app: config, layout, catalog, a sample tool, one intent, and a committed spec, so it runs with no API key.
