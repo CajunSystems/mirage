@@ -1,6 +1,6 @@
 {
   "name": "@cajunsystems/mirage-catalog-basic",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Default component catalog for Mirage, styled with plain CSS variables.",
   "keywords": [
     "mirage",

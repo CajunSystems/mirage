@@ -1,5 +1,16 @@
 # @cajunsystems/mirage-vite
 
+## 0.2.0
+
+### Minor Changes
+
+- 79d59f2: Routes are code-split: each route's committed spec, ejected page and layouts load when the route is first visited, instead of all in the initial bundle. `MirageRoute` gains `loadSpec`, `loadPage` and layout `load` (eager `spec`, `page` and `component` still work). Live routes no longer ship their committed spec to the client.
+
+### Patch Changes
+
+- @cajunsystems/mirage-core@0.2.0
+  - @cajunsystems/mirage-server@0.2.0
+
 ## 0.1.0
 
 ### Minor Changes
